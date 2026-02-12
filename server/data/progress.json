@@ -1,0 +1,80 @@
+{
+  "userId": "local-user",
+  "displayName": "You",
+  "xp": 35,
+  "level": 1,
+  "currentStreak": 1,
+  "longestStreak": 1,
+  "lastActiveDate": "2026-02-12",
+  "totalQuestionsAnswered": 10,
+  "totalCorrect": 5,
+  "heartsRemaining": 5,
+  "maxHearts": 5,
+  "completedLessons": [],
+  "lessonProgress": {},
+  "questionHistory": {
+    "py-b-1": {
+      "attempts": 1,
+      "correct": 1,
+      "lastAttempted": "2026-02-12T04:17:56.825Z"
+    },
+    "py-b-2": {
+      "attempts": 1,
+      "correct": 0,
+      "lastAttempted": "2026-02-12T04:18:12.042Z"
+    },
+    "py-b-3": {
+      "attempts": 1,
+      "correct": 0,
+      "lastAttempted": "2026-02-12T04:18:27.563Z"
+    },
+    "py-b-4": {
+      "attempts": 1,
+      "correct": 1,
+      "lastAttempted": "2026-02-12T04:18:49.761Z"
+    },
+    "py-b-5": {
+      "attempts": 1,
+      "correct": 0,
+      "lastAttempted": "2026-02-12T04:19:00.108Z"
+    },
+    "py-b-7": {
+      "attempts": 1,
+      "correct": 1,
+      "lastAttempted": "2026-02-12T04:19:11.665Z"
+    },
+    "py-b-6": {
+      "attempts": 1,
+      "correct": 0,
+      "lastAttempted": "2026-02-12T04:19:26.601Z"
+    },
+    "py-b-8": {
+      "attempts": 1,
+      "correct": 1,
+      "lastAttempted": "2026-02-12T04:19:46.939Z"
+    },
+    "py-b-10": {
+      "attempts": 1,
+      "correct": 1,
+      "lastAttempted": "2026-02-12T04:20:15.959Z"
+    },
+    "py-b-9": {
+      "attempts": 1,
+      "correct": 0,
+      "lastAttempted": "2026-02-12T04:20:45.584Z"
+    }
+  },
+  "reviewQueue": [
+    "py-b-2",
+    "py-b-3",
+    "py-b-5",
+    "py-b-6",
+    "py-b-9"
+  ],
+  "dailyXp": {
+    "2026-02-12": 35
+  },
+  "achievements": [],
+  "createdAt": "2024-01-01T00:00:00.000Z",
+  "updatedAt": "2026-02-12T04:20:45.584Z"
+}
