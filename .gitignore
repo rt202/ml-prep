@@ -6,3 +6,6 @@ dist/
 .env.*
 server/.env
 server/.env.*
+
+# Private documentation & notes (local only)
+private-docs/
