@@ -1,6 +1,9 @@
 {
   "userId": "local-user",
-  "displayName": "You",
+  "displayName": "ro",
+  "role": "admin",
+  "difficulty": "medium",
+  "companySize": "large",
   "xp": 35,
   "level": 1,
   "currentStreak": 1,

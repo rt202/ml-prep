@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../utils/api'
-import { BookOpen, Target, Flame, Zap, Trophy, RotateCcw, TrendingUp, CheckCircle2, Brain } from 'lucide-react'
+import { useUserProfile } from '../context/UserProfileContext'
+import { BookOpen, Target, Flame, Zap, Trophy, RotateCcw, TrendingUp, CheckCircle2, Brain, Sparkles, Building2, ArrowRight } from 'lucide-react'
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null)
   const [progress, setProgress] = useState(null)
+  const [recommended, setRecommended] = useState([])
   const [loading, setLoading] = useState(true)
+  const { profile } = useUserProfile()
 
   useEffect(() => {
     Promise.all([api.getStats(), api.getProgress()])
@@ -14,6 +17,15 @@ export default function Dashboard() {
       .catch(console.error)
       .finally(() => setLoading(false))
   }, [])
+
+  // Fetch recommended questions when profile preferences change
+  useEffect(() => {
+    api.getRecommended({
+      difficulty: profile.difficulty,
+      companySize: profile.companySize,
+      limit: 6,
+    }).then(setRecommended).catch(() => setRecommended([]))
+  }, [profile.difficulty, profile.companySize])
 
   if (loading) return (
     <div className="flex items-center justify-center h-[60vh]">
@@ -141,6 +153,63 @@ export default function Dashboard() {
           </div>
         </Link>
       </div>
+
+      {/* Recommended Questions */}
+      {recommended.length > 0 && (
+        <div className="card p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-primary-500" />
+              Recommended For You
+            </h2>
+            <div className="flex items-center gap-2 text-xs">
+              <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full font-medium ${
+                { easy: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
+                  medium: 'bg-highlight-100 dark:bg-highlight-900/30 text-highlight-700 dark:text-highlight-400',
+                  hard: 'bg-accent-100 dark:bg-accent-900/30 text-accent-700 dark:text-accent-400',
+                  very_hard: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' }[profile.difficulty]
+              }`}>
+                <Target className="w-3 h-3" />
+                {profile.difficulty.replace('_', ' ')}
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
+                <Building2 className="w-3 h-3" />
+                {profile.companySize}
+              </span>
+            </div>
+          </div>
+          <div className="space-y-2">
+            {recommended.map((q, idx) => {
+              const diffColors = {
+                easy: 'bg-green-500',
+                medium: 'bg-highlight-500',
+                hard: 'bg-accent-500',
+                very_hard: 'bg-red-500',
+              }
+              return (
+                <Link
+                  key={q.id}
+                  to={`/quiz/${q.unitId}/${q.lessonId}`}
+                  className="flex items-center gap-4 p-3.5 rounded-xl bg-gray-50 dark:bg-gray-800/50 hover:bg-primary-50 dark:hover:bg-primary-900/10 transition-all duration-200 group"
+                >
+                  <div className={`w-8 h-8 rounded-lg ${diffColors[q.difficulty]} flex items-center justify-center text-white text-xs font-bold flex-shrink-0`}>
+                    {idx + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
+                      {q.text}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {q.unitId.replace(/-/g, ' ')} · {q.roles?.slice(0, 2).map(r => r.replace(/_/g, ' ')).join(', ')}
+                    </p>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-gray-300 dark:text-gray-600 group-hover:text-primary-500 transition-colors flex-shrink-0" />
+                </Link>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Recent Activity */}
       {Object.keys(progress.dailyXp).length > 0 && (

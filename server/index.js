@@ -1,87 +1,208 @@
+import './loadEnv.js';
 import express from 'express';
 import cors from 'cors';
-import fs from 'fs/promises';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-import { questions } from './data/questions.js';
-import { units } from './data/units.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import { randomUUID } from 'node:crypto';
+import { questions as staticQuestions } from './data/questions.js';
+import { units as staticUnits } from './data/units.js';
+import {
+  initDb,
+  registerUser,
+  loginUser,
+  createSession,
+  getUserBySession,
+  deleteSession,
+  getUserProfile,
+  updateUserProfile,
+  getProgress,
+  updateProgress,
+  upsertQuestionHistory,
+  upsertLessonProgress,
+  setReviewQueueItem,
+  upsertDailyXp,
+  resetUserProgress,
+  listUsers,
+  updateUserRole,
+  createCustomUnit,
+  updateCustomUnit,
+  createCustomLesson,
+  updateCustomLesson,
+  createCustomQuestion,
+  updateCustomQuestion,
+  getPublishedCustomUnits,
+  getPublishedCustomLessons,
+  getPublishedCustomQuestions,
+  getAdminContent,
+  logAdminAction,
+  ensureUserFromExternalAuth,
+} from './db.js';
+import { getSupabaseUserByAccessToken, isSupabaseConfigured } from './supabase.js';
 
 const app = express();
 const PORT = 3001;
-const PROGRESS_FILE = join(__dirname, 'data', 'progress.json');
 
-app.use(cors());
+initDb();
+
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
-// Default progress structure (designed for easy Supabase migration)
-const defaultProgress = {
-  userId: 'local-user',
-  displayName: 'You',
-  xp: 0,
-  level: 1,
-  currentStreak: 0,
-  longestStreak: 0,
-  lastActiveDate: null,
-  totalQuestionsAnswered: 0,
-  totalCorrect: 0,
-  heartsRemaining: 5,
-  maxHearts: 5,
-  completedLessons: [],
-  lessonProgress: {},
-  questionHistory: {},
-  reviewQueue: [],
-  dailyXp: {},
-  achievements: [],
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-};
-
-// Load progress from JSON file
-async function loadProgress() {
-  try {
-    const data = await fs.readFile(PROGRESS_FILE, 'utf-8');
-    return JSON.parse(data);
-  } catch {
-    await saveProgress(defaultProgress);
-    return defaultProgress;
+function parseCookies(req) {
+  const cookieHeader = req.headers.cookie || '';
+  const items = cookieHeader.split(';').map((chunk) => chunk.trim()).filter(Boolean);
+  const cookies = {};
+  for (const item of items) {
+    const idx = item.indexOf('=');
+    if (idx === -1) continue;
+    const key = item.slice(0, idx);
+    const value = decodeURIComponent(item.slice(idx + 1));
+    cookies[key] = value;
   }
+  return cookies;
 }
 
-// Save progress to JSON file
-async function saveProgress(progress) {
-  progress.updatedAt = new Date().toISOString();
-  await fs.writeFile(PROGRESS_FILE, JSON.stringify(progress, null, 2));
+function setSessionCookie(res, sessionId) {
+  res.setHeader(
+    'Set-Cookie',
+    `sid=${encodeURIComponent(sessionId)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${60 * 60 * 24 * 14}`,
+  );
 }
 
-// ====== API ROUTES ======
+function clearSessionCookie(res) {
+  res.setHeader('Set-Cookie', 'sid=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0');
+}
 
-// Get all units with lesson info
-app.get('/api/units', (req, res) => {
-  res.json(units);
+function getEffectiveUnits() {
+  const customUnits = getPublishedCustomUnits();
+  const customLessons = getPublishedCustomLessons();
+  const lessonsByUnit = new Map();
+  for (const lesson of customLessons) {
+    if (!lessonsByUnit.has(lesson.unit_id)) lessonsByUnit.set(lesson.unit_id, []);
+    lessonsByUnit.get(lesson.unit_id).push({
+      id: lesson.id,
+      name: lesson.name,
+      order: lesson.order_index,
+      questionCount: lesson.question_count,
+    });
+  }
+
+  const result = staticUnits.map((unit) => ({
+    ...unit,
+    lessons: [
+      ...unit.lessons,
+      ...(lessonsByUnit.get(unit.id) || []),
+    ].sort((a, b) => a.order - b.order),
+  }));
+
+  for (const unit of customUnits) {
+    result.push({
+      id: unit.id,
+      name: unit.name,
+      description: unit.description,
+      icon: unit.icon,
+      order: unit.order_index,
+      lessons: (lessonsByUnit.get(unit.id) || []).sort((a, b) => a.order - b.order),
+    });
+  }
+  return result.sort((a, b) => a.order - b.order);
+}
+
+function getEffectiveQuestions() {
+  return [...staticQuestions, ...getPublishedCustomQuestions()];
+}
+
+async function requireAuth(req, res, next) {
+  const authHeader = req.headers.authorization || '';
+  if (authHeader.startsWith('Bearer ')) {
+    const token = authHeader.slice('Bearer '.length).trim();
+    if (isSupabaseConfigured()) {
+      const supabaseUser = await getSupabaseUserByAccessToken(token);
+      if (supabaseUser?.email) {
+        const localUser = ensureUserFromExternalAuth({
+          email: supabaseUser.email,
+          displayName:
+            supabaseUser.user_metadata?.display_name ||
+            supabaseUser.user_metadata?.name ||
+            supabaseUser.email.split('@')[0],
+        });
+        req.user = localUser;
+        return next();
+      }
+    }
+  }
+
+  const cookies = parseCookies(req);
+  const user = getUserBySession(cookies.sid);
+  if (!user) return res.status(401).json({ error: 'Unauthorized' });
+  req.user = user;
+  next();
+}
+
+function requireAdmin(req, res, next) {
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Admin only' });
+  }
+  next();
+}
+
+app.get('/api/health', (_req, res) => {
+  res.json({ ok: true });
 });
 
-// Get questions for a specific lesson
+// ===== Auth =====
+app.post('/api/auth/signup', (req, res) => {
+  try {
+    const { email, password, displayName } = req.body;
+    if (!email || !password || !displayName) {
+      return res.status(400).json({ error: 'email, password, displayName are required' });
+    }
+    const user = registerUser({ email, password, displayName });
+    const session = createSession(user.id);
+    setSessionCookie(res, session.sessionId);
+    res.json({ user });
+  } catch (error) {
+    res.status(400).json({ error: error.message || 'Unable to sign up' });
+  }
+});
+
+app.post('/api/auth/login', (req, res) => {
+  const { email, password } = req.body;
+  const user = loginUser({ email, password });
+  if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+  const session = createSession(user.id);
+  setSessionCookie(res, session.sessionId);
+  res.json({ user });
+});
+
+app.post('/api/auth/logout', (req, res) => {
+  const cookies = parseCookies(req);
+  if (cookies.sid) deleteSession(cookies.sid);
+  clearSessionCookie(res);
+  res.json({ ok: true });
+});
+
+app.get('/api/auth/me', requireAuth, (req, res) => {
+  res.json({ user: req.user });
+});
+
+// ===== Protected App API =====
+app.use('/api', requireAuth);
+
+app.get('/api/units', (_req, res) => {
+  res.json(getEffectiveUnits());
+});
+
 app.get('/api/lessons/:unitId/:lessonId/questions', (req, res) => {
   const { unitId, lessonId } = req.params;
-  const lessonQuestions = questions.filter(
-    (q) => q.unitId === unitId && q.lessonId === lessonId
-  );
-  if (lessonQuestions.length === 0) {
-    return res.status(404).json({ error: 'Lesson not found' });
-  }
-  // Sort by difficulty order within lesson
+  const questions = getEffectiveQuestions();
+  const lessonQuestions = questions.filter((q) => q.unitId === unitId && q.lessonId === lessonId);
+  if (lessonQuestions.length === 0) return res.status(404).json({ error: 'Lesson not found' });
   const diffOrder = { easy: 0, medium: 1, hard: 2, very_hard: 3 };
   lessonQuestions.sort((a, b) => diffOrder[a.difficulty] - diffOrder[b.difficulty]);
   res.json(lessonQuestions);
 });
 
-// Get all questions (for filtering)
 app.get('/api/questions', (req, res) => {
   const { role, difficulty, category, companySize, unitId } = req.query;
-  let filtered = [...questions];
+  let filtered = [...getEffectiveQuestions()];
   if (role) filtered = filtered.filter((q) => q.roles.includes(role));
   if (difficulty) filtered = filtered.filter((q) => q.difficulty === difficulty);
   if (category) filtered = filtered.filter((q) => q.category === category);
@@ -90,187 +211,261 @@ app.get('/api/questions', (req, res) => {
   res.json(filtered);
 });
 
-// Get user progress
-app.get('/api/progress', async (req, res) => {
-  const progress = await loadProgress();
-  res.json(progress);
+app.get('/api/progress', (req, res) => {
+  res.json(getProgress(req.user.id));
 });
 
-// Update user progress
-app.put('/api/progress', async (req, res) => {
-  const progress = await loadProgress();
-  const updated = { ...progress, ...req.body, updatedAt: new Date().toISOString() };
-  await saveProgress(updated);
+app.put('/api/progress', (req, res) => {
+  const updated = updateProgress(req.user.id, req.body || {});
   res.json(updated);
 });
 
-// Submit answer for a question
-app.post('/api/answer', async (req, res) => {
-  const { questionId, selectedAnswer, lessonId, unitId } = req.body;
-  const question = questions.find((q) => q.id === questionId);
+app.post('/api/answer', (req, res) => {
+  const { questionId, selectedAnswer } = req.body;
+  const question = getEffectiveQuestions().find((q) => q.id === questionId);
   if (!question) return res.status(404).json({ error: 'Question not found' });
 
+  const progress = getProgress(req.user.id);
   const isCorrect = selectedAnswer === question.correctAnswer;
-  const progress = await loadProgress();
+  const xpGain = isCorrect ? ({ easy: 5, medium: 10, hard: 20, very_hard: 35 }[question.difficulty] || 10) : 0;
+  const now = new Date().toISOString();
+  const today = now.split('T')[0];
 
-  // Update question history
-  if (!progress.questionHistory[questionId]) {
-    progress.questionHistory[questionId] = {
-      attempts: 0,
-      correct: 0,
-      lastAttempted: null,
-    };
-  }
-  progress.questionHistory[questionId].attempts += 1;
-  if (isCorrect) progress.questionHistory[questionId].correct += 1;
-  progress.questionHistory[questionId].lastAttempted = new Date().toISOString();
+  upsertQuestionHistory(req.user.id, questionId, (row) => ({
+    attempts: row.attempts + 1,
+    correct: row.correct + (isCorrect ? 1 : 0),
+    lastAttempted: now,
+  }));
 
-  // Update totals
-  progress.totalQuestionsAnswered += 1;
-  if (isCorrect) {
-    progress.totalCorrect += 1;
-    const xpGain = { easy: 5, medium: 10, hard: 20, very_hard: 35 }[question.difficulty] || 10;
-    progress.xp += xpGain;
-    // Level up every 100 XP
-    progress.level = Math.floor(progress.xp / 100) + 1;
-  }
-
-  // Add to review queue if wrong
-  if (!isCorrect && !progress.reviewQueue.includes(questionId)) {
-    progress.reviewQueue.push(questionId);
-  } else if (isCorrect && progress.reviewQueue.includes(questionId)) {
-    // Remove from review queue if answered correctly
-    const qHistory = progress.questionHistory[questionId];
-    if (qHistory.correct >= 2) {
-      progress.reviewQueue = progress.reviewQueue.filter((id) => id !== questionId);
+  if (!isCorrect) {
+    setReviewQueueItem(req.user.id, questionId, true);
+  } else {
+    const after = getProgress(req.user.id);
+    const history = after.questionHistory[questionId];
+    if (history && history.correct >= 2) {
+      setReviewQueueItem(req.user.id, questionId, false);
     }
   }
 
-  // Update streak
-  const today = new Date().toISOString().split('T')[0];
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+  let nextCurrentStreak = progress.currentStreak;
   if (progress.lastActiveDate !== today) {
-    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-    if (progress.lastActiveDate === yesterday) {
-      progress.currentStreak += 1;
-    } else if (progress.lastActiveDate !== today) {
-      progress.currentStreak = 1;
-    }
-    progress.lastActiveDate = today;
-  }
-  if (progress.currentStreak > progress.longestStreak) {
-    progress.longestStreak = progress.currentStreak;
+    if (progress.lastActiveDate === yesterday) nextCurrentStreak += 1;
+    else nextCurrentStreak = 1;
   }
 
-  // Track daily XP
-  if (!progress.dailyXp[today]) progress.dailyXp[today] = 0;
-  if (isCorrect) {
-    const xpGain = { easy: 5, medium: 10, hard: 20, very_hard: 35 }[question.difficulty] || 10;
-    progress.dailyXp[today] += xpGain;
-  }
-
-  await saveProgress(progress);
+  updateProgress(req.user.id, {
+    xp: progress.xp + xpGain,
+    level: Math.floor((progress.xp + xpGain) / 100) + 1,
+    totalQuestionsAnswered: progress.totalQuestionsAnswered + 1,
+    totalCorrect: progress.totalCorrect + (isCorrect ? 1 : 0),
+    currentStreak: nextCurrentStreak,
+    longestStreak: Math.max(progress.longestStreak, nextCurrentStreak),
+    lastActiveDate: today,
+  });
+  if (isCorrect) upsertDailyXp(req.user.id, today, xpGain);
 
   res.json({
     correct: isCorrect,
     correctAnswer: question.correctAnswer,
     explanation: question.explanation,
-    xpGained: isCorrect ? ({ easy: 5, medium: 10, hard: 20, very_hard: 35 }[question.difficulty] || 10) : 0,
-    progress,
+    xpGained: xpGain,
+    progress: getProgress(req.user.id),
   });
 });
 
-// Complete a lesson
-app.post('/api/lessons/complete', async (req, res) => {
+app.post('/api/lessons/complete', (req, res) => {
   const { unitId, lessonId, score, totalQuestions } = req.body;
-  const progress = await loadProgress();
   const lessonKey = `${unitId}-${lessonId}`;
+  upsertLessonProgress(req.user.id, lessonKey, (row) => {
+    const attempts = row.attempts + 1;
+    const bestScore = Math.max(row.bestScore, score);
+    const completed = row.completed || score >= Math.ceil(totalQuestions * 0.7);
+    return { attempts, bestScore, completed };
+  });
 
-  if (!progress.lessonProgress[lessonKey]) {
-    progress.lessonProgress[lessonKey] = {
-      bestScore: 0,
-      attempts: 0,
-      completed: false,
+  const progress = getProgress(req.user.id);
+  if (score >= Math.ceil(totalQuestions * 0.7) && !progress.completedLessons.includes(lessonKey)) {
+    updateProgress(req.user.id, {
+      xp: progress.xp + 25,
+      level: Math.floor((progress.xp + 25) / 100) + 1,
+    });
+  }
+  res.json(getProgress(req.user.id));
+});
+
+app.get('/api/review', (req, res) => {
+  const reviewIds = new Set(getProgress(req.user.id).reviewQueue);
+  res.json(getEffectiveQuestions().filter((q) => reviewIds.has(q.id)));
+});
+
+app.post('/api/progress/reset', (req, res) => {
+  resetUserProgress(req.user.id);
+  res.json(getProgress(req.user.id));
+});
+
+app.get('/api/leaderboard', (req, res) => {
+  const users = listUsers();
+  const leaderboard = users.map((user) => {
+    const progress = getProgress(user.id);
+    return {
+      name: user.displayName,
+      xp: progress.xp,
+      streak: progress.currentStreak,
+      level: progress.level,
+      isUser: user.id === req.user.id,
     };
-  }
-
-  progress.lessonProgress[lessonKey].attempts += 1;
-  if (score > progress.lessonProgress[lessonKey].bestScore) {
-    progress.lessonProgress[lessonKey].bestScore = score;
-  }
-
-  // Lesson is completed if score is above threshold
-  const threshold = Math.ceil(totalQuestions * 0.7);
-  if (score >= threshold) {
-    progress.lessonProgress[lessonKey].completed = true;
-    if (!progress.completedLessons.includes(lessonKey)) {
-      progress.completedLessons.push(lessonKey);
-      // Bonus XP for completing lesson
-      progress.xp += 25;
-      progress.level = Math.floor(progress.xp / 100) + 1;
-    }
-  }
-
-  await saveProgress(progress);
-  res.json(progress);
-});
-
-// Get review queue questions
-app.get('/api/review', async (req, res) => {
-  const progress = await loadProgress();
-  const reviewQuestions = questions.filter((q) =>
-    progress.reviewQueue.includes(q.id)
-  );
-  res.json(reviewQuestions);
-});
-
-// Reset progress
-app.post('/api/progress/reset', async (req, res) => {
-  await saveProgress({ ...defaultProgress, createdAt: new Date().toISOString() });
-  res.json(defaultProgress);
-});
-
-// Get leaderboard (local mock + user)
-app.get('/api/leaderboard', async (req, res) => {
-  const progress = await loadProgress();
-  const leaderboard = [
-    { name: progress.displayName || 'You', xp: progress.xp, streak: progress.currentStreak, level: progress.level, isUser: true },
-    { name: 'Alex Chen', xp: 2450, streak: 15, level: 25, isUser: false },
-    { name: 'Sarah Kim', xp: 1890, streak: 8, level: 19, isUser: false },
-    { name: 'James Liu', xp: 1650, streak: 22, level: 17, isUser: false },
-    { name: 'Priya Patel', xp: 1420, streak: 5, level: 15, isUser: false },
-    { name: 'Mike Johnson', xp: 1100, streak: 3, level: 12, isUser: false },
-    { name: 'Emma Wilson', xp: 890, streak: 11, level: 9, isUser: false },
-    { name: 'David Park', xp: 720, streak: 2, level: 8, isUser: false },
-    { name: 'Lisa Zhang', xp: 580, streak: 7, level: 6, isUser: false },
-    { name: 'Tom Brown', xp: 340, streak: 1, level: 4, isUser: false },
-  ];
-  leaderboard.sort((a, b) => b.xp - a.xp);
+  }).sort((a, b) => b.xp - a.xp);
   res.json(leaderboard);
 });
 
-// Stats endpoint
-app.get('/api/stats', async (req, res) => {
-  const progress = await loadProgress();
-  const totalQuestions = questions.length;
-  const answeredQuestions = Object.keys(progress.questionHistory).length;
+app.get('/api/recommended', (req, res) => {
+  const { difficulty, companySize, limit = 10 } = req.query;
+  const progress = getProgress(req.user.id);
+  let recommended = [...getEffectiveQuestions()];
+  if (difficulty) recommended = recommended.filter((q) => q.difficulty === difficulty);
+  if (companySize) recommended = recommended.filter((q) => q.companySizes.includes(companySize));
+
+  recommended.sort((a, b) => {
+    const aHistory = progress.questionHistory[a.id];
+    const bHistory = progress.questionHistory[b.id];
+    if (!aHistory && bHistory) return -1;
+    if (aHistory && !bHistory) return 1;
+    if (!aHistory && !bHistory) return 0;
+    const aAcc = aHistory.correct / Math.max(aHistory.attempts, 1);
+    const bAcc = bHistory.correct / Math.max(bHistory.attempts, 1);
+    if (aAcc !== bAcc) return aAcc - bAcc;
+    return new Date(aHistory.lastAttempted) - new Date(bHistory.lastAttempted);
+  });
+  recommended = recommended.slice(0, Math.min(parseInt(limit, 10) || 10, 20));
+  res.json(recommended);
+});
+
+app.get('/api/profile', (req, res) => {
+  res.json(getUserProfile(req.user.id));
+});
+
+app.put('/api/profile', (req, res) => {
+  const actorRole = req.user.role;
+  const updated = updateUserProfile(req.user.id, req.body || {}, actorRole);
+  res.json(updated);
+});
+
+app.get('/api/stats', (req, res) => {
+  const progress = getProgress(req.user.id);
+  const allUnits = getEffectiveUnits();
+  const totalLessons = allUnits.reduce((sum, unit) => sum + unit.lessons.length, 0);
+  const totalQuestions = getEffectiveQuestions().length;
   const accuracy = progress.totalQuestionsAnswered > 0
     ? Math.round((progress.totalCorrect / progress.totalQuestionsAnswered) * 100)
     : 0;
 
   res.json({
     totalQuestions,
-    answeredQuestions,
+    answeredQuestions: Object.keys(progress.questionHistory).length,
     accuracy,
     xp: progress.xp,
     level: progress.level,
     streak: progress.currentStreak,
     longestStreak: progress.longestStreak,
     completedLessons: progress.completedLessons.length,
-    totalLessons: units.reduce((sum, u) => sum + u.lessons.length, 0),
+    totalLessons,
     reviewQueueSize: progress.reviewQueue.length,
   });
 });
 
+// ===== Admin =====
+app.get('/api/admin/users', requireAdmin, (_req, res) => {
+  res.json(listUsers());
+});
+
+app.put('/api/admin/users/:id/role', requireAdmin, (req, res) => {
+  const user = updateUserRole(req.params.id, req.body.role);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  logAdminAction(req.user.id, 'update_user_role', `user:${req.params.id}`, { role: req.body.role });
+  res.json(user);
+});
+
+app.get('/api/admin/content', requireAdmin, (_req, res) => {
+  res.json(getAdminContent());
+});
+
+app.post('/api/admin/units', requireAdmin, (req, res) => {
+  const id = req.body.id || `custom-unit-${randomUUID().slice(0, 8)}`;
+  createCustomUnit({
+    id,
+    name: req.body.name,
+    description: req.body.description || '',
+    icon: req.body.icon || '📚',
+    orderIndex: req.body.orderIndex ?? 999,
+    isPublished: req.body.isPublished ?? true,
+    createdBy: req.user.id,
+  });
+  logAdminAction(req.user.id, 'create_unit', `unit:${id}`, req.body);
+  res.json({ id });
+});
+
+app.put('/api/admin/units/:id', requireAdmin, (req, res) => {
+  const updated = updateCustomUnit(req.params.id, req.body || {});
+  if (!updated) return res.status(404).json({ error: 'Unit not found' });
+  logAdminAction(req.user.id, 'update_unit', `unit:${req.params.id}`, req.body);
+  res.json(updated);
+});
+
+app.post('/api/admin/lessons', requireAdmin, (req, res) => {
+  const id = req.body.id || `custom-lesson-${randomUUID().slice(0, 8)}`;
+  createCustomLesson({
+    id,
+    unitId: req.body.unitId,
+    name: req.body.name,
+    orderIndex: req.body.orderIndex ?? 1,
+    questionCount: req.body.questionCount ?? 0,
+    isPublished: req.body.isPublished ?? true,
+    createdBy: req.user.id,
+  });
+  logAdminAction(req.user.id, 'create_lesson', `lesson:${id}`, req.body);
+  res.json({ id });
+});
+
+app.put('/api/admin/lessons/:id', requireAdmin, (req, res) => {
+  const updated = updateCustomLesson(req.params.id, req.body || {});
+  if (!updated) return res.status(404).json({ error: 'Lesson not found' });
+  logAdminAction(req.user.id, 'update_lesson', `lesson:${req.params.id}`, req.body);
+  res.json(updated);
+});
+
+app.post('/api/admin/questions', requireAdmin, (req, res) => {
+  const id = req.body.id || `custom-q-${randomUUID().slice(0, 8)}`;
+  createCustomQuestion({
+    id,
+    text: req.body.text,
+    options: req.body.options || [],
+    correctAnswer: req.body.correctAnswer ?? 0,
+    explanation: req.body.explanation || '',
+    difficulty: req.body.difficulty || 'medium',
+    roles: req.body.roles || ['data_scientist', 'ml_engineer', 'ai_engineer', 'mlops_engineer'],
+    category: req.body.category || 'industry_practice',
+    companySizes: req.body.companySizes || ['startup', 'midsize', 'large', 'faang'],
+    unitId: req.body.unitId,
+    lessonId: req.body.lessonId,
+    isPublished: req.body.isPublished ?? true,
+    createdBy: req.user.id,
+  });
+  logAdminAction(req.user.id, 'create_question', `question:${id}`, req.body);
+  res.json({ id });
+});
+
+app.put('/api/admin/questions/:id', requireAdmin, (req, res) => {
+  const updated = updateCustomQuestion(req.params.id, req.body || {});
+  if (!updated) return res.status(404).json({ error: 'Question not found' });
+  logAdminAction(req.user.id, 'update_question', `question:${req.params.id}`, req.body);
+  res.json(updated);
+});
+
 app.listen(PORT, () => {
+  const allQuestions = getEffectiveQuestions();
+  const allUnits = getEffectiveUnits();
+  console.log(`📚 Loaded ${allQuestions.length} interview questions across ${allUnits.length} units`);
   console.log(`🚀 Interview Prep API running on http://localhost:${PORT}`);
+  console.log('🔐 Default admin login: ro@local.dev / ro123456');
 });
