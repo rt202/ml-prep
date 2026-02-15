@@ -227,4 +227,37 @@ export const units = [
       { id: 'governance-privacy', name: 'AI Governance & Privacy', order: 2, questionCount: 10 },
     ],
   },
+  {
+    id: 'delivery-operations',
+    name: 'Delivery & Operations',
+    description: 'CI/CD workflows, deployment strategies, and practical production operations',
+    icon: '🛠️',
+    order: 21,
+    lessons: [
+      { id: 'ci-cd-procedures', name: 'CI/CD Procedures', order: 1, questionCount: 5 },
+      { id: 'deployment-strategies', name: 'Deployment Strategies', order: 2, questionCount: 5 },
+    ],
+  },
+  {
+    id: 'ai-systems-implementation',
+    name: 'AI Systems Implementation',
+    description: 'Model selection, context handling, MCP integration, and agent design patterns',
+    icon: '🤝',
+    order: 22,
+    lessons: [
+      { id: 'model-ops-patterns', name: 'Model & Inference Patterns', order: 1, questionCount: 5 },
+      { id: 'agents-context-mcp', name: 'Agents, Context, and MCP', order: 2, questionCount: 5 },
+    ],
+  },
+  {
+    id: 'production-problem-solving',
+    name: 'Production Problem Solving',
+    description: 'Reliability, incident response, and cross-functional execution in real systems',
+    icon: '🧭',
+    order: 23,
+    lessons: [
+      { id: 'reliability-incident-response', name: 'Reliability & Incident Response', order: 1, questionCount: 5 },
+      { id: 'cross-functional-execution', name: 'Cross-Functional Execution', order: 2, questionCount: 5 },
+    ],
+  },
 ];
