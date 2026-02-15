@@ -1,4 +1,6 @@
-const API_BASE = '/api'
+const API_BASE = import.meta.env.VITE_API_BASE_URL
+  ? `${import.meta.env.VITE_API_BASE_URL}/api`
+  : '/api'
 
 async function fetchJSON(url, options = {}) {
   const accessToken = typeof window !== 'undefined' ? localStorage.getItem('supabase_access_token') : null
