@@ -143,6 +143,22 @@ function requireAdmin(req, res, next) {
   next();
 }
 
+app.get('/', (_req, res) => {
+  res.json({
+    name: 'ML Interview Prep API',
+    version: '1.0.0',
+    status: 'running',
+    endpoints: {
+      health: '/api/health',
+      auth: '/api/auth/*',
+      units: '/api/units',
+      questions: '/api/questions',
+      progress: '/api/progress',
+    },
+    message: 'Backend API is running successfully!',
+  });
+});
+
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true });
 });
