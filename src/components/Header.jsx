@@ -1,11 +1,12 @@
 import { Link, useLocation } from 'react-router-dom'
-import { useTheme } from '../context/ThemeContext'
 import { useState, useEffect } from 'react'
 import { api } from '../utils/api'
-import { Brain, Home, BookOpen, Trophy, RotateCcw, Sun, Moon, Flame, Zap } from 'lucide-react'
+import { Brain, Home, BookOpen, Trophy, RotateCcw, Flame, Zap } from 'lucide-react'
+import UserProfileDropdown from './UserProfileDropdown'
+import { useAuth } from '../context/AuthContext'
 
 export default function Header() {
-  const { darkMode, toggleDarkMode } = useTheme()
+  const { isAdmin } = useAuth()
   const location = useLocation()
   const [stats, setStats] = useState(null)
 
@@ -18,6 +19,7 @@ export default function Header() {
     { path: '/learn', icon: BookOpen, label: 'Learn' },
     { path: '/review', icon: RotateCcw, label: 'Review' },
     { path: '/leaderboard', icon: Trophy, label: 'Ranks' },
+    ...(isAdmin ? [{ path: '/admin', icon: Trophy, label: 'Admin' }] : []),
   ]
 
   return (
@@ -55,7 +57,7 @@ export default function Header() {
             })}
           </nav>
 
-          {/* Right side: Stats + Theme toggle */}
+          {/* Right side: Stats + User Profile */}
           <div className="flex items-center gap-4">
             {stats && (
               <div className="flex items-center gap-4 text-sm">
@@ -71,13 +73,7 @@ export default function Header() {
                 </div>
               </div>
             )}
-            <button
-              onClick={toggleDarkMode}
-              className="w-9 h-9 rounded-xl flex items-center justify-center bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-              aria-label="Toggle dark mode"
-            >
-              {darkMode ? <Sun className="w-4 h-4 text-highlight-400" /> : <Moon className="w-4 h-4 text-gray-500" />}
-            </button>
+            <UserProfileDropdown />
           </div>
         </div>
       </div>

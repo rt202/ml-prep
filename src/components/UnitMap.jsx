@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../utils/api'
+import { useUserProfile } from '../context/UserProfileContext'
 import { Lock, CheckCircle2, PlayCircle, ChevronDown, ChevronRight, Star } from 'lucide-react'
 
 export default function UnitMap() {
@@ -8,6 +9,8 @@ export default function UnitMap() {
   const [progress, setProgress] = useState(null)
   const [expandedUnit, setExpandedUnit] = useState(null)
   const [loading, setLoading] = useState(true)
+  const { profile } = useUserProfile()
+  const isAdmin = profile.role === 'admin'
 
   useEffect(() => {
     Promise.all([api.getUnits(), api.getProgress()])
@@ -31,6 +34,7 @@ export default function UnitMap() {
   )
 
   const isUnitUnlocked = (unitIndex) => {
+    if (isAdmin) return true
     if (unitIndex === 0) return true
     const prevUnit = units[unitIndex - 1]
     return prevUnit.lessons.every(l =>
@@ -47,6 +51,7 @@ export default function UnitMap() {
   }
 
   const isLessonUnlocked = (unit, lessonIndex, unitIndex) => {
+    if (isAdmin) return true
     if (!isUnitUnlocked(unitIndex)) return false
     if (lessonIndex === 0) return true
     const prevLesson = unit.lessons[lessonIndex - 1]
@@ -64,7 +69,11 @@ export default function UnitMap() {
     <div className="space-y-4 animate-fade-in">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Learning Path</h1>
-        <p className="text-gray-500 dark:text-gray-400">Master each topic from fundamentals to expert level</p>
+        <p className="text-gray-500 dark:text-gray-400">
+          {isAdmin
+            ? 'Admin mode: all learning paths are visible and unlocked.'
+            : 'Master each topic from fundamentals to expert level'}
+        </p>
       </div>
 
       {units.map((unit, unitIndex) => {
