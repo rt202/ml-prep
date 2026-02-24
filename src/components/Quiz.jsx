@@ -88,7 +88,11 @@ export default function Quiz() {
 
   const handleAnswer = useCallback(async (answerIndex) => {
     if (isAnswered) return
+
+    // Determine correctness locally FIRST to avoid the brief "Not quite" flash
+    const locallyCorrect = answerIndex === questions[currentIndex].correctAnswer
     setSelectedAnswer(answerIndex)
+    setIsCorrect(locallyCorrect)
     setIsAnswered(true)
 
     try {
@@ -99,7 +103,7 @@ export default function Quiz() {
         lessonId,
       })
 
-      setIsCorrect(result.correct)
+      // Update with server-confirmed values (explanation, XP)
       setExplanation(result.explanation)
       setXpGained(result.xpGained)
 

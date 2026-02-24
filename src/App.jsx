@@ -3,6 +3,7 @@ import Header from './components/Header'
 import Dashboard from './components/Dashboard'
 import UnitMap from './components/UnitMap'
 import Quiz from './components/Quiz'
+import CodingChallenge from './components/CodingChallenge'
 import ReviewQueue from './components/ReviewQueue'
 import Leaderboard from './components/Leaderboard'
 import LessonComplete from './components/LessonComplete'
@@ -34,6 +35,7 @@ export default function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/learn" element={<UnitMap />} />
           <Route path="/quiz/:unitId/:lessonId" element={<Quiz />} />
+          <Route path="/code/:unitId/:challengeId" element={<CodingChallenge />} />
           <Route path="/lesson-complete/:unitId/:lessonId" element={<LessonComplete />} />
           <Route path="/review" element={<ReviewQueue />} />
           <Route path="/leaderboard" element={<Leaderboard />} />

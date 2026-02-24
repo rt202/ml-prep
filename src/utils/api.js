@@ -25,6 +25,8 @@ export const api = {
 
   // Units & Questions
   getUnits: () => fetchJSON('/units'),
+  getCodingQuestions: (unitId) => unitId ? fetchJSON(`/coding-questions/${unitId}`) : fetchJSON('/coding-questions'),
+  getAllCodingQuestions: () => fetchJSON('/coding-questions'),
   getLessonQuestions: (unitId, lessonId) => fetchJSON(`/lessons/${unitId}/${lessonId}/questions`),
   getQuestions: (filters = {}) => {
     const params = new URLSearchParams(filters).toString()
