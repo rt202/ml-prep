@@ -2,21 +2,29 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../utils/api'
 import { useUserProfile } from '../context/UserProfileContext'
-import { Lock, CheckCircle2, PlayCircle, ChevronDown, ChevronRight, Star } from 'lucide-react'
+import { Lock, CheckCircle2, PlayCircle, ChevronDown, ChevronRight, Star, Code2 } from 'lucide-react'
 
 export default function UnitMap() {
   const [units, setUnits] = useState([])
   const [progress, setProgress] = useState(null)
+  const [codingByUnit, setCodingByUnit] = useState({})
   const [expandedUnit, setExpandedUnit] = useState(null)
   const [loading, setLoading] = useState(true)
   const { profile } = useUserProfile()
   const isAdmin = profile.role === 'admin'
 
   useEffect(() => {
-    Promise.all([api.getUnits(), api.getProgress()])
-      .then(([u, p]) => {
+    Promise.all([api.getUnits(), api.getProgress(), api.getAllCodingQuestions()])
+      .then(([u, p, coding]) => {
         setUnits(u)
         setProgress(p)
+        // Group coding challenges by unit
+        const byUnit = {}
+        for (const c of coding) {
+          if (!byUnit[c.unitId]) byUnit[c.unitId] = []
+          byUnit[c.unitId].push(c)
+        }
+        setCodingByUnit(byUnit)
         // Auto-expand the first incomplete unit
         const firstIncomplete = u.find(unit =>
           unit.lessons.some(l => !p.completedLessons.includes(`${unit.id}-${l.id}`))
@@ -129,7 +137,7 @@ export default function UnitMap() {
               )}
             </button>
 
-            {/* Lessons */}
+            {/* Lessons + Coding Challenges */}
             {isExpanded && unlocked && (
               <div className="border-t border-gray-100 dark:border-gray-800 p-4 space-y-2">
                 {unit.lessons.map((lesson, lessonIndex) => {
@@ -195,6 +203,43 @@ export default function UnitMap() {
                     </div>
                   )
                 })}
+
+                {/* Coding Challenges */}
+                {codingByUnit[unit.id]?.length > 0 && (
+                  <>
+                    <div className="flex items-center gap-2 pt-3 pb-1 px-1">
+                      <Code2 className="w-4 h-4 text-accent-500" />
+                      <span className="text-xs font-bold text-accent-600 dark:text-accent-400 uppercase tracking-wider">
+                        Coding Challenges
+                      </span>
+                    </div>
+                    {codingByUnit[unit.id].map((challenge) => {
+                      const diffColors = {
+                        easy: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+                        medium: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+                        hard: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+                      }
+                      return (
+                        <Link
+                          key={challenge.id}
+                          to={`/code/${unit.id}/${challenge.id}`}
+                          className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-accent-50 to-primary-50 dark:from-accent-900/10 dark:to-primary-900/10 hover:from-accent-100 hover:to-primary-100 dark:hover:from-accent-900/20 dark:hover:to-primary-900/20 transition-all duration-200 border border-accent-200/50 dark:border-accent-800/30"
+                        >
+                          <div className="w-10 h-10 rounded-xl bg-accent-500 text-white flex items-center justify-center">
+                            <Code2 className="w-5 h-5" />
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-gray-900 dark:text-white text-sm">{challenge.title}</h3>
+                            <p className="text-xs text-gray-400">Python · Coding challenge</p>
+                          </div>
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${diffColors[challenge.difficulty]}`}>
+                            {challenge.difficulty}
+                          </span>
+                        </Link>
+                      )
+                    })}
+                  </>
+                )}
               </div>
             )}
           </div>

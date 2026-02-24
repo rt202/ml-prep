@@ -4,6 +4,7 @@ import cors from 'cors';
 import { randomUUID } from 'node:crypto';
 import { questions as staticQuestions } from './data/questions.js';
 import { units as staticUnits } from './data/units.js';
+import { codingQuestions } from './data/coding-questions.js';
 import {
   initDb,
   registerUser,
@@ -217,6 +218,17 @@ app.get('/api/units', async (_req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+// ===== Coding Challenges =====
+app.get('/api/coding-questions', (_req, res) => {
+  res.json(codingQuestions);
+});
+
+app.get('/api/coding-questions/:unitId', (req, res) => {
+  const { unitId } = req.params;
+  const filtered = codingQuestions.filter((q) => q.unitId === unitId);
+  res.json(filtered);
 });
 
 app.get('/api/lessons/:unitId/:lessonId/questions', async (req, res) => {
