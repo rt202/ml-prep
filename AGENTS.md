@@ -173,3 +173,30 @@ Just share your rough prompt and I'll engineer it for maximum accuracy!"
 5. **Self-Correction Protocol:** Build in AI's ability to catch and fix errors
 
 **Memory Note:** Do not save any information from optimization sessions to memory.
+
+## Cursor Cloud specific instructions
+
+### Project overview
+
+ML Interview Prep — a full-stack React + Express app with Supabase as the database/auth backend. Single `package.json` at the root manages both frontend and backend.
+
+### Running the application
+
+- `npm run dev` starts both Express backend (port 3001) and Vite frontend (port 5173) via `concurrently`.
+- `npm run dev:server` / `npm run dev:client` run them individually.
+- See `package.json` `scripts` for all available commands.
+
+### Environment variables
+
+The backend loads env vars from `server/.env.development` (or `server/.env`), but only sets values that are **not already in `process.env`** (see `server/loadEnv.js`). Injected secrets take precedence.
+
+The frontend (Vite) requires `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. These must be set in a root `.env.development` file or as shell env vars before starting the Vite dev server. They are derived from the `SUPABASE_URL` and `SUPABASE_ANON_KEY` secrets.
+
+Required secrets: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ANON_KEY`, `SESSION_SECRET`.
+
+### Gotchas
+
+- **No test framework** is configured. There are no unit/integration tests, no eslint, and no linter in `package.json`.
+- **Supabase Auth rate limits**: The hosted Supabase instance rate-limits signup emails aggressively. To create test users, use the Supabase Admin API: `POST ${SUPABASE_URL}/auth/v1/admin/users` with `Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}` and `email_confirm: true`.
+- **No local database fallback**: `server/db.js` is 100% Supabase REST API. Without valid Supabase credentials, the backend starts but all data API calls fail.
+- The frontend `.env.development` must be regenerated if secrets change: `echo "VITE_SUPABASE_URL=${SUPABASE_URL}\nVITE_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}" > .env.development`
