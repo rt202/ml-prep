@@ -87,6 +87,81 @@ export async function runTests(userCode, testCode) {
   const fullCode = userCode + '\n\n' + testCode;
   const { stdout, stderr, error } = await runPython(fullCode);
 
+  return parseTestResults(stdout, stderr, error);
+}
+
+/**
+ * Run a SQL query against an in-memory SQLite database seeded with setupSql.
+ * Prints results as a formatted ASCII table.
+ */
+export async function runSql(userSql, setupSql) {
+  const code = `
+import sqlite3
+
+_conn = sqlite3.connect(':memory:')
+_cur = _conn.cursor()
+try:
+    _cur.executescript(${JSON.stringify(setupSql)})
+    _conn.commit()
+except Exception as e:
+    print(f"Setup Error: {e}")
+    _conn.close()
+    raise
+
+try:
+    _cur.execute(${JSON.stringify(userSql)})
+    _rows = _cur.fetchall()
+    _cols = [desc[0] for desc in _cur.description] if _cur.description else []
+    if _cols and _rows:
+        _widths = []
+        for i, col in enumerate(_cols):
+            max_data = max((len(str(row[i])) for row in _rows), default=0)
+            _widths.append(max(len(str(col)), max_data))
+        print(' | '.join(str(c).ljust(w) for c, w in zip(_cols, _widths)))
+        print('-+-'.join('-' * w for w in _widths))
+        for _row in _rows:
+            print(' | '.join(str(v).ljust(w) for v, w in zip(_row, _widths)))
+        print(f"\\n({len(_rows)} row{'s' if len(_rows) != 1 else ''})")
+    elif _cols:
+        print(' | '.join(_cols))
+        print('(0 rows)')
+    else:
+        print("Query executed successfully (no result set returned)")
+except Exception as e:
+    print(f"SQL Error: {e}")
+finally:
+    _conn.close()
+`;
+  return await runPython(code);
+}
+
+/**
+ * Grade a SQL query. Sets up user_sql as a Python string and a _setup_db()
+ * helper, then runs the Python testCode which uses them.
+ */
+export async function runSqlTests(userSql, setupSql, testCode) {
+  const preamble = [
+    'import sqlite3, json',
+    '',
+    `user_sql = ${JSON.stringify(userSql)}`,
+    '',
+    'def _setup_db():',
+    '    conn = sqlite3.connect(":memory:")',
+    '    cur = conn.cursor()',
+    `    cur.executescript(${JSON.stringify(setupSql)})`,
+    '    conn.commit()',
+    '    return conn',
+    '',
+  ].join('\n');
+
+  const fullCode = preamble + '\n' + testCode;
+  const { stdout, stderr, error } = await runPython(fullCode);
+
+  return parseTestResults(stdout, stderr, error);
+}
+
+/** Shared helper to extract __TEST_RESULTS__ JSON from stdout. */
+function parseTestResults(stdout, stderr, error) {
   let results = null;
   const marker = '__TEST_RESULTS__';
   const idx = stdout.indexOf(marker);
@@ -98,7 +173,6 @@ export async function runTests(userCode, testCode) {
     }
   }
 
-  // Strip the test results line from the displayed stdout
   const cleanStdout = idx !== -1 ? stdout.slice(0, idx).trimEnd() : stdout;
 
   return { results, stdout: cleanStdout, stderr, error };

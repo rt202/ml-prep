@@ -44,7 +44,7 @@ export const questionsPart1 = [
   {
     id: 'py-b-4',
     text: 'What is the difference between `==` and `is` in Python?',
-    options: ['They are identical', '`==` checks value equality, `is` checks identity (same object in memory)', '`is` checks value equality, `==` checks identity', '`==` only works with numbers'],
+    options: ['`==` and `is` both check value equality, but `is` also verifies type compatibility', '`==` checks value equality, `is` checks identity (same object in memory)', '`is` checks value equality, `==` checks identity (same object in memory)', '`==` performs strict comparison without type coercion, `is` allows implicit type casting'],
     correctAnswer: 1,
     explanation: '`==` compares the values of two objects, while `is` checks whether two references point to the exact same object in memory. For example, `[1,2] == [1,2]` is True, but `[1,2] is [1,2]` is False.',
     difficulty: 'easy',
@@ -83,7 +83,7 @@ export const questionsPart1 = [
   {
     id: 'py-b-7',
     text: 'What does the `zip()` function do in Python?',
-    options: ['Compresses files', 'Creates an iterator of tuples from multiple iterables', 'Merges two dictionaries', 'Sorts multiple lists simultaneously'],
+    options: ['Flattens nested iterables into a single one-dimensional sequence', 'Creates an iterator of tuples from multiple iterables', 'Combines two dictionaries by merging their key-value pairs', 'Sorts multiple lists simultaneously based on the first list'],
     correctAnswer: 1,
     explanation: '`zip()` takes multiple iterables and returns an iterator of tuples, where each tuple contains elements from each iterable at the same position. Example: `zip([1,2], ["a","b"])` yields `(1,"a"), (2,"b")`.',
     difficulty: 'easy',
@@ -96,7 +96,7 @@ export const questionsPart1 = [
   {
     id: 'py-b-8',
     text: 'What is a list comprehension and what is its advantage over a for loop?',
-    options: ['It is slower but more readable', 'It is generally faster and more concise than equivalent for loops', 'It only works with numbers', 'It creates tuples instead of lists'],
+    options: ['It is slower but more readable than a standard for loop with append', 'It is generally faster and more concise than equivalent for loops', 'It evaluates all elements lazily, only computing values when accessed', 'It always returns a new copy of the original list with transformations applied in-place'],
     correctAnswer: 1,
     explanation: 'List comprehensions are syntactic sugar that is both more concise and generally faster than for loops because the iteration is optimized in C under the hood. Example: `[x**2 for x in range(10)]`.',
     difficulty: 'medium',
@@ -109,7 +109,7 @@ export const questionsPart1 = [
   {
     id: 'py-b-9',
     text: 'What is the Global Interpreter Lock (GIL) in CPython?',
-    options: ['A security feature that prevents unauthorized code execution', 'A mutex that protects access to Python objects, preventing multiple threads from executing Python bytecode simultaneously', 'A garbage collection mechanism', 'A way to lock global variables'],
+    options: ['A security sandbox that restricts Python code from making unauthorized system calls', 'A mutex that protects access to Python objects, preventing multiple threads from executing Python bytecode simultaneously', 'A reference counting mechanism that automatically deallocates objects when their count reaches zero', 'A locking protocol that prevents concurrent modification of module-level variables across threads'],
     correctAnswer: 1,
     explanation: 'The GIL is a mutex in CPython that allows only one thread to execute Python bytecode at a time. This means CPU-bound multithreaded programs may not see performance benefits. For CPU-bound parallelism, use multiprocessing instead.',
     difficulty: 'hard',
@@ -122,7 +122,7 @@ export const questionsPart1 = [
   {
     id: 'py-b-10',
     text: 'In Python, what is the difference between shallow copy and deep copy?',
-    options: ['There is no difference', 'Shallow copy creates a new object but references the same nested objects; deep copy recursively copies all objects', 'Deep copy is always faster', 'Shallow copy only works with lists'],
+    options: ['Shallow copy duplicates all nested objects recursively; deep copy only copies the top-level container', 'Shallow copy creates a new object but references the same nested objects; deep copy recursively copies all objects', 'Deep copy creates a frozen immutable snapshot; shallow copy creates a mutable reference to the original', 'Shallow copy preserves object identity for all elements; deep copy reassigns new identities only to the root'],
     correctAnswer: 1,
     explanation: 'A shallow copy (`copy.copy()`) creates a new object but inserts references to the same nested objects. A deep copy (`copy.deepcopy()`) creates a new object and recursively copies all nested objects, creating fully independent copies.',
     difficulty: 'medium',
@@ -137,7 +137,7 @@ export const questionsPart1 = [
   {
     id: 'py-a-1',
     text: 'What is a Python generator and how does it differ from a regular function?',
-    options: ['Generators run faster than functions', 'Generators use `yield` to produce values lazily, maintaining state between calls, while functions use `return` and execute completely', 'Generators can only produce numbers', 'There is no difference'],
+    options: ['Generators compile to optimized native code at import time, running faster than interpreted functions', 'Generators use `yield` to produce values lazily, maintaining state between calls, while functions use `return` and execute completely', 'Generators eagerly compute all values upfront and cache them in memory for repeated iteration', 'Generators use `return` to produce values but execute asynchronously across multiple threads'],
     correctAnswer: 1,
     explanation: 'Generators use `yield` instead of `return` to produce a sequence of values lazily (one at a time). They maintain their state between calls and are memory-efficient for large datasets since they do not store all values in memory at once.',
     difficulty: 'medium',
@@ -150,7 +150,7 @@ export const questionsPart1 = [
   {
     id: 'py-a-2',
     text: 'What is a decorator in Python?',
-    options: ['A design pattern for UI elements', 'A function that takes another function and extends its behavior without modifying it', 'A type of class inheritance', 'A way to add comments to code'],
+    options: ['A metaclass that automatically registers subclasses in a global registry at import time', 'A function that takes another function and extends its behavior without modifying it', 'A mixin class that injects additional methods into a class through multiple inheritance', 'A syntax for defining inline anonymous functions that can be passed as callback arguments'],
     correctAnswer: 1,
     explanation: 'A decorator is a function that wraps another function to extend or modify its behavior. They use the `@decorator_name` syntax and are commonly used for logging, authentication, caching, etc.',
     difficulty: 'medium',
@@ -189,7 +189,7 @@ export const questionsPart1 = [
   {
     id: 'py-a-5',
     text: 'What are `*args` and `**kwargs` used for?',
-    options: ['Error handling', '`*args` collects positional arguments as a tuple, `**kwargs` collects keyword arguments as a dictionary', 'Defining global variables', 'Type annotations'],
+    options: ['`*args` unpacks a list into individual elements, `**kwargs` unpacks a dictionary into key-value strings', '`*args` collects positional arguments as a tuple, `**kwargs` collects keyword arguments as a dictionary', '`*args` passes arguments by reference, `**kwargs` passes arguments by value', '`*args` specifies required positional parameters, `**kwargs` specifies optional default parameters'],
     correctAnswer: 1,
     explanation: '`*args` allows a function to accept any number of positional arguments (packed into a tuple). `**kwargs` allows a function to accept any number of keyword arguments (packed into a dictionary). They enable flexible function signatures.',
     difficulty: 'easy',
@@ -202,7 +202,7 @@ export const questionsPart1 = [
   {
     id: 'py-a-6',
     text: 'What is the purpose of `__slots__` in a Python class?',
-    options: ['To define database fields', 'To restrict attribute creation and reduce memory usage by avoiding per-instance __dict__', 'To create time slots for scheduling', 'To define method signatures'],
+    options: ['To enforce type constraints on instance attributes at class definition time', 'To restrict attribute creation and reduce memory usage by avoiding per-instance __dict__', 'To register class methods as available endpoints for the descriptor protocol', 'To define a fixed ordering of attributes for consistent serialization and hashing'],
     correctAnswer: 1,
     explanation: '`__slots__` restricts a class to only the attributes listed, preventing the creation of a `__dict__` for each instance. This saves significant memory when creating many instances and can speed up attribute access.',
     difficulty: 'hard',
@@ -215,7 +215,7 @@ export const questionsPart1 = [
   {
     id: 'py-a-7',
     text: 'What is a context manager in Python and how is it typically used?',
-    options: ['A project management tool', 'An object that defines `__enter__` and `__exit__` methods, commonly used with `with` statements for resource management', 'A debugging tool', 'A way to manage environment variables'],
+    options: ['A namespace container that isolates variables within a specific execution scope', 'An object that defines `__enter__` and `__exit__` methods, commonly used with `with` statements for resource management', 'A thread-local storage mechanism for managing state across concurrent operations', 'A module-level configuration object that controls import resolution and package paths'],
     correctAnswer: 1,
     explanation: 'Context managers implement `__enter__` and `__exit__` methods and are used with `with` statements. They ensure proper acquisition and release of resources (files, locks, connections). Example: `with open("file.txt") as f:`.',
     difficulty: 'medium',
@@ -228,7 +228,7 @@ export const questionsPart1 = [
   {
     id: 'py-a-8',
     text: 'What is monkey patching in Python?',
-    options: ['A code obfuscation technique', 'Dynamically modifying a class or module at runtime', 'A testing framework', 'An optimization technique'],
+    options: ['Applying code patches through version control hooks before committing changes', 'Dynamically modifying a class or module at runtime', 'A pattern where subclasses override parent methods to alter inherited behavior', 'Rewriting bytecode at compile time to optimize frequently called function paths'],
     correctAnswer: 1,
     explanation: 'Monkey patching is the dynamic modification of a class or module at runtime. While it can be useful for testing (mocking), it should be used sparingly in production as it can make code harder to debug and maintain.',
     difficulty: 'hard',
@@ -269,7 +269,7 @@ export const questionsPart1 = [
   {
     id: 'np-1',
     text: 'What is broadcasting in NumPy?',
-    options: ['Sending arrays over a network', 'A mechanism that allows NumPy to perform operations on arrays of different shapes by automatically expanding dimensions', 'Converting arrays to lists', 'A way to print arrays'],
+    options: ['Distributing array computations across multiple CPU cores for parallel processing', 'A mechanism that allows NumPy to perform operations on arrays of different shapes by automatically expanding dimensions', 'Copying array data from host memory to GPU memory for accelerated computation', 'Reshaping arrays by transposing rows and columns automatically during operations'],
     correctAnswer: 1,
     explanation: 'Broadcasting allows NumPy to perform element-wise operations on arrays with different shapes. Smaller arrays are "broadcast" across larger arrays so they have compatible shapes. For example, adding a scalar to an array adds it to every element.',
     difficulty: 'medium',
@@ -295,7 +295,7 @@ export const questionsPart1 = [
   {
     id: 'np-3',
     text: 'What does `df.groupby("col").agg({"val": ["mean", "sum"]})` do?',
-    options: ['Filters rows', 'Groups the DataFrame by "col" and computes both mean and sum of "val" for each group', 'Sorts the DataFrame', 'Renames columns'],
+    options: ['Filters rows where "col" matches "val" and returns the mean and sum of remaining columns', 'Groups the DataFrame by "col" and computes both mean and sum of "val" for each group', 'Sorts the DataFrame by "col" and applies rolling mean and sum windows to "val"', 'Pivots the DataFrame so that unique values of "col" become column headers with "val" as values'],
     correctAnswer: 1,
     explanation: 'This groups the DataFrame by unique values in "col", then computes multiple aggregate functions (mean and sum) on the "val" column for each group, returning a multi-level column DataFrame.',
     difficulty: 'medium',
@@ -321,7 +321,7 @@ export const questionsPart1 = [
   {
     id: 'np-5',
     text: 'What is vectorization in NumPy and why is it important?',
-    options: ['Converting data to vectors for visualization', 'Performing operations on entire arrays at once using optimized C code instead of Python loops, resulting in significant speedups', 'A compression technique', 'Converting images to arrays'],
+    options: ['Encoding categorical features as numeric vectors using one-hot or label encoding schemes', 'Performing operations on entire arrays at once using optimized C code instead of Python loops, resulting in significant speedups', 'Distributing array computations across multiple threads using Python\'s built-in concurrency', 'Transforming sparse matrices into dense representations for more efficient memory access patterns'],
     correctAnswer: 1,
     explanation: 'Vectorization means performing operations on entire arrays at once using NumPy\'s underlying C implementation, avoiding slow Python loops. This can be 10-100x faster than equivalent Python loops for numerical computations.',
     difficulty: 'medium',
@@ -360,7 +360,7 @@ export const questionsPart1 = [
   {
     id: 'np-8',
     text: 'What is the `apply()` method in Pandas used for?',
-    options: ['Applying CSS styles', 'Applying a function along an axis of the DataFrame or to each element of a Series', 'Merging DataFrames', 'Sorting data'],
+    options: ['Applying vectorized NumPy operations directly to DataFrame columns for optimization', 'Applying a function along an axis of the DataFrame or to each element of a Series', 'Appending rows from one DataFrame to the end of another DataFrame', 'Filtering DataFrame rows based on a boolean condition applied to each column'],
     correctAnswer: 1,
     explanation: '`apply()` applies a function along an axis of a DataFrame (rows or columns) or to each element of a Series. It is versatile but can be slow for large datasets compared to vectorized operations.',
     difficulty: 'easy',
@@ -386,7 +386,7 @@ export const questionsPart1 = [
   {
     id: 'np-10',
     text: 'Why should you avoid chained indexing (e.g., `df["col"][0] = val`) in Pandas?',
-    options: ['It is too slow', 'It may create a copy instead of a view, leading to the SettingWithCopyWarning and potentially not modifying the original DataFrame', 'It causes memory leaks', 'It is deprecated syntax'],
+    options: ['It bypasses the DataFrame index alignment, causing silent data misalignment on assignment', 'It may create a copy instead of a view, leading to the SettingWithCopyWarning and potentially not modifying the original DataFrame', 'It holds multiple locks on the underlying array, risking deadlocks in concurrent access', 'It forces Pandas to recompute the index at each step, resulting in O(n²) time complexity'],
     correctAnswer: 1,
     explanation: 'Chained indexing can create a temporary copy, so assignments may not modify the original DataFrame. This triggers the SettingWithCopyWarning. Use `.loc[]` or `.iloc[]` for safe assignments: `df.loc[0, "col"] = val`.',
     difficulty: 'hard',
@@ -799,7 +799,7 @@ export const questionsPart1 = [
   {
     id: 'la-1',
     text: 'What are eigenvalues and eigenvectors?',
-    options: ['Types of matrices', 'For a matrix A, an eigenvector v satisfies Av = λv, where λ is the corresponding eigenvalue (a scalar)', 'Eigenvectors are always orthogonal', 'Eigenvalues are always positive'],
+    options: ['Special basis vectors that diagonalize any matrix, with eigenvalues representing the rotation angles', 'For a matrix A, an eigenvector v satisfies Av = λv, where λ is the corresponding eigenvalue (a scalar)', 'Eigenvectors are always orthogonal to each other and eigenvalues are their pairwise dot products', 'Eigenvalues are always positive real numbers and eigenvectors always have unit length'],
     correctAnswer: 1,
     explanation: 'For a square matrix A, an eigenvector v is a non-zero vector such that Av = λv, where λ is the eigenvalue. The eigenvector\'s direction is unchanged by the transformation; the eigenvalue is the scaling factor.',
     difficulty: 'medium',
@@ -931,7 +931,7 @@ export const questionsPart1 = [
   {
     id: 'calc-1',
     text: 'What is gradient descent?',
-    options: ['A sorting algorithm', 'An iterative optimization algorithm that updates parameters in the direction of the negative gradient to minimize a loss function', 'A type of neural network', 'A regularization technique'],
+    options: ['A matrix factorization method that decomposes weight matrices into lower-rank approximations', 'An iterative optimization algorithm that updates parameters in the direction of the negative gradient to minimize a loss function', 'A sampling technique that draws from the posterior distribution to estimate model parameters', 'A feature selection method that ranks input variables by their contribution to model predictions'],
     correctAnswer: 1,
     explanation: 'Gradient descent iteratively updates parameters: θ = θ - α∇L(θ), where α is the learning rate and ∇L(θ) is the gradient of the loss function. It moves in the steepest descent direction to find a minimum.',
     difficulty: 'easy',
