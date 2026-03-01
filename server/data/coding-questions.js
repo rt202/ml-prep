@@ -912,6 +912,751 @@ print("__TEST_RESULTS__" + json.dumps(results))
 `,
   },
 
+  // ─── Unit 12: Big Data / SQL ──────────────────────────────────────────────
+  {
+    id: 'sql-window-rank',
+    unitId: 'sql-data',
+    title: 'Implement Window RANK in Python',
+    description:
+      'Simulate a SQL window function: given a list of rows, implement RANK() OVER (PARTITION BY group ORDER BY score DESC). Each row should get a rank within its partition.',
+    difficulty: 'medium',
+    starterCode: `def rank_within_groups(rows, partition_col, order_col):
+    """Assign a rank to each row within its partition, ordered by order_col descending.
+
+    Ties get the same rank, and the next rank skips (standard competition ranking).
+
+    Args:
+        rows: list of dicts, e.g. [{"dept": "eng", "name": "Alice", "score": 95}, ...]
+        partition_col: key to partition by, e.g. "dept"
+        order_col: key to order by (descending), e.g. "score"
+
+    Returns:
+        list of dicts — original rows with an added "rank" key
+    """
+    # TODO: implement
+    pass
+`,
+    solutionCode: `def rank_within_groups(rows, partition_col, order_col):
+    groups = {}
+    for i, row in enumerate(rows):
+        key = row[partition_col]
+        if key not in groups:
+            groups[key] = []
+        groups[key].append((i, row))
+    result = [None] * len(rows)
+    for key, members in groups.items():
+        members.sort(key=lambda x: x[1][order_col], reverse=True)
+        rank = 1
+        for pos, (orig_idx, row) in enumerate(members):
+            if pos > 0 and members[pos][1][order_col] < members[pos - 1][1][order_col]:
+                rank = pos + 1
+            new_row = dict(row)
+            new_row["rank"] = rank
+            result[orig_idx] = new_row
+    return result
+`,
+    hints: [
+      'Group rows by the partition column into a dictionary of lists.',
+      'Sort each group by the order column in descending order.',
+      'Assign ranks: rank starts at 1. If the current value equals the previous, keep the same rank. Otherwise, set rank = position + 1 (competition ranking).',
+    ],
+    testCode: `import json
+results = []
+try:
+    data = [
+        {"dept": "eng", "name": "Alice", "score": 95},
+        {"dept": "eng", "name": "Bob", "score": 90},
+        {"dept": "eng", "name": "Carol", "score": 95},
+        {"dept": "sales", "name": "Dave", "score": 80},
+        {"dept": "sales", "name": "Eve", "score": 85},
+    ]
+    r = rank_within_groups(data, "dept", "score")
+    alice = next(x for x in r if x["name"] == "Alice")
+    bob = next(x for x in r if x["name"] == "Bob")
+    carol = next(x for x in r if x["name"] == "Carol")
+    eve = next(x for x in r if x["name"] == "Eve")
+    dave = next(x for x in r if x["name"] == "Dave")
+    results.append({"name": "Alice rank=1 (tied top)", "passed": alice["rank"] == 1, "expected": "1", "actual": str(alice["rank"])})
+    results.append({"name": "Carol rank=1 (tied top)", "passed": carol["rank"] == 1, "expected": "1", "actual": str(carol["rank"])})
+    results.append({"name": "Bob rank=3 (skip after tie)", "passed": bob["rank"] == 3, "expected": "3", "actual": str(bob["rank"])})
+    results.append({"name": "Eve rank=1 in sales", "passed": eve["rank"] == 1, "expected": "1", "actual": str(eve["rank"])})
+    results.append({"name": "Dave rank=2 in sales", "passed": dave["rank"] == 2, "expected": "2", "actual": str(dave["rank"])})
+except Exception as e:
+    results.append({"name": "Runtime Error", "passed": False, "error": str(e)})
+print("__TEST_RESULTS__" + json.dumps(results))
+`,
+  },
+
+  // ─── Deep-ML Inspired: Softmax ──────────────────────────────────────────
+  {
+    id: 'dl-softmax',
+    unitId: 'deep-learning',
+    title: 'Softmax from Scratch',
+    description:
+      'Implement the softmax function that converts a vector of raw scores (logits) into a probability distribution. Handle numerical stability.',
+    difficulty: 'medium',
+    starterCode: `import math
+
+def softmax(logits):
+    """Compute softmax probabilities from raw logits.
+
+    softmax(x_i) = exp(x_i) / sum(exp(x_j) for all j)
+
+    Important: Subtract the max logit for numerical stability.
+
+    Args:
+        logits: list of floats (raw scores)
+    Returns:
+        list of floats (probabilities that sum to 1)
+    """
+    # TODO: implement with numerical stability
+    pass
+`,
+    solutionCode: `import math
+
+def softmax(logits):
+    max_logit = max(logits)
+    exps = [math.exp(x - max_logit) for x in logits]
+    total = sum(exps)
+    return [e / total for e in exps]
+`,
+    hints: [
+      'Subtract the maximum logit from all values before exponentiating to prevent overflow.',
+      'Compute exp(x_i - max) for each logit, then divide each by the sum of all exps.',
+      'The output should be a valid probability distribution: all values in [0, 1] and summing to 1.',
+    ],
+    testCode: `import json, math
+results = []
+try:
+    r = softmax([1.0, 2.0, 3.0])
+    results.append({"name": "Sum to 1", "passed": abs(sum(r) - 1.0) < 1e-6, "expected": "1.0", "actual": f"{sum(r):.6f}"})
+    results.append({"name": "Largest logit → largest prob", "passed": r[2] > r[1] > r[0], "expected": "r[2]>r[1]>r[0]", "actual": f"{r[0]:.3f},{r[1]:.3f},{r[2]:.3f}"})
+    r2 = softmax([0.0, 0.0, 0.0])
+    results.append({"name": "Equal logits → uniform", "passed": all(abs(p - 1/3) < 1e-6 for p in r2), "expected": "all 0.333", "actual": str([f"{p:.3f}" for p in r2])})
+    r3 = softmax([1000, 1001, 1002])
+    results.append({"name": "Large logits (stability)", "passed": abs(sum(r3) - 1.0) < 1e-6, "expected": "1.0", "actual": f"{sum(r3):.6f}"})
+    r4 = softmax([10, 0])
+    results.append({"name": "Dominant logit ≈ 1", "passed": r4[0] > 0.999, "expected": ">0.999", "actual": f"{r4[0]:.6f}"})
+except Exception as e:
+    results.append({"name": "Runtime Error", "passed": False, "error": str(e)})
+print("__TEST_RESULTS__" + json.dumps(results))
+`,
+  },
+
+  // ─── Deep-ML Inspired: Cross-Entropy Loss ───────────────────────────────
+  {
+    id: 'dl-cross-entropy',
+    unitId: 'deep-learning',
+    title: 'Cross-Entropy Loss from Scratch',
+    description:
+      'Implement binary cross-entropy loss and categorical cross-entropy loss from scratch. These are the most common loss functions for classification.',
+    difficulty: 'medium',
+    starterCode: `import math
+
+def binary_cross_entropy(y_true, y_pred):
+    """Compute binary cross-entropy loss.
+
+    BCE = -1/n * sum(y*log(p) + (1-y)*log(1-p))
+
+    Args:
+        y_true: list of true labels (0 or 1)
+        y_pred: list of predicted probabilities (0 to 1)
+    Returns:
+        float: average loss
+    """
+    # TODO: implement (clip predictions to avoid log(0))
+    pass
+
+def categorical_cross_entropy(y_true_onehot, y_pred):
+    """Compute categorical cross-entropy loss.
+
+    CCE = -1/n * sum(sum(y_ij * log(p_ij)))
+
+    Args:
+        y_true_onehot: list of one-hot vectors, e.g. [[1,0,0],[0,1,0]]
+        y_pred: list of probability vectors, e.g. [[0.7,0.2,0.1],[0.1,0.8,0.1]]
+    Returns:
+        float: average loss
+    """
+    # TODO: implement
+    pass
+`,
+    solutionCode: `import math
+
+def binary_cross_entropy(y_true, y_pred):
+    eps = 1e-15
+    n = len(y_true)
+    total = 0.0
+    for y, p in zip(y_true, y_pred):
+        p = max(eps, min(1 - eps, p))
+        total += y * math.log(p) + (1 - y) * math.log(1 - p)
+    return -total / n
+
+def categorical_cross_entropy(y_true_onehot, y_pred):
+    eps = 1e-15
+    n = len(y_true_onehot)
+    total = 0.0
+    for true_vec, pred_vec in zip(y_true_onehot, y_pred):
+        for y, p in zip(true_vec, pred_vec):
+            p = max(eps, p)
+            total += y * math.log(p)
+    return -total / n
+`,
+    hints: [
+      'Clip predictions to a tiny epsilon (e.g. 1e-15) to avoid log(0) which is -infinity.',
+      'Binary CE: for each sample, compute y*log(p) + (1-y)*log(1-p), sum, negate, and average.',
+      'Categorical CE: for each sample, sum y_j * log(p_j) over all classes, then negate and average over all samples.',
+    ],
+    testCode: `import json, math
+results = []
+try:
+    bce = binary_cross_entropy([1, 0, 1], [0.9, 0.1, 0.8])
+    expected = -(math.log(0.9) + math.log(0.9) + math.log(0.8)) / 3
+    results.append({"name": "BCE basic", "passed": abs(bce - expected) < 1e-4, "expected": f"{expected:.4f}", "actual": f"{bce:.4f}"})
+    bce_perfect = binary_cross_entropy([1, 0], [1.0, 0.0])
+    results.append({"name": "BCE perfect preds ≈ 0", "passed": bce_perfect < 0.01, "expected": "~0", "actual": f"{bce_perfect:.6f}"})
+    bce_bad = binary_cross_entropy([1, 0], [0.01, 0.99])
+    results.append({"name": "BCE bad preds → high loss", "passed": bce_bad > 2.0, "expected": ">2.0", "actual": f"{bce_bad:.4f}"})
+    cce = categorical_cross_entropy([[1,0,0],[0,1,0]], [[0.7,0.2,0.1],[0.1,0.8,0.1]])
+    results.append({"name": "CCE basic", "passed": 0 < cce < 1, "expected": "0 < loss < 1", "actual": f"{cce:.4f}"})
+    cce_perfect = categorical_cross_entropy([[1,0],[0,1]], [[1.0,0.0],[0.0,1.0]])
+    results.append({"name": "CCE perfect ≈ 0", "passed": cce_perfect < 0.01, "expected": "~0", "actual": f"{cce_perfect:.6f}"})
+except Exception as e:
+    results.append({"name": "Runtime Error", "passed": False, "error": str(e)})
+print("__TEST_RESULTS__" + json.dumps(results))
+`,
+  },
+
+  // ─── Deep-ML Inspired: TF-IDF ──────────────────────────────────────────
+  {
+    id: 'nlp-tfidf',
+    unitId: 'nlp',
+    title: 'TF-IDF from Scratch',
+    description:
+      'Implement Term Frequency-Inverse Document Frequency (TF-IDF) scoring. Given a corpus of documents, compute TF-IDF weights for each term in each document.',
+    difficulty: 'hard',
+    starterCode: `import math
+
+def compute_tf(document):
+    """Compute term frequency for each word in a document.
+
+    TF(t, d) = count(t in d) / total_words_in_d
+
+    Args:
+        document: string
+    Returns:
+        dict mapping word -> TF score
+    """
+    # TODO: implement
+    pass
+
+def compute_idf(corpus):
+    """Compute inverse document frequency for each word in the corpus.
+
+    IDF(t) = log(N / df(t)) where N is total docs and df(t) is docs containing t
+
+    Args:
+        corpus: list of strings (documents)
+    Returns:
+        dict mapping word -> IDF score
+    """
+    # TODO: implement
+    pass
+
+def compute_tfidf(corpus):
+    """Compute TF-IDF for each document in the corpus.
+
+    Args:
+        corpus: list of strings (documents)
+    Returns:
+        list of dicts, each mapping word -> TF-IDF score
+    """
+    # TODO: implement using compute_tf and compute_idf
+    pass
+`,
+    solutionCode: `import math
+
+def compute_tf(document):
+    words = document.lower().split()
+    n = len(words)
+    freq = {}
+    for w in words:
+        freq[w] = freq.get(w, 0) + 1
+    return {w: count / n for w, count in freq.items()}
+
+def compute_idf(corpus):
+    n_docs = len(corpus)
+    df = {}
+    for doc in corpus:
+        seen = set(doc.lower().split())
+        for w in seen:
+            df[w] = df.get(w, 0) + 1
+    return {w: math.log(n_docs / count) for w, count in df.items()}
+
+def compute_tfidf(corpus):
+    idf = compute_idf(corpus)
+    result = []
+    for doc in corpus:
+        tf = compute_tf(doc)
+        tfidf = {w: tf_val * idf.get(w, 0) for w, tf_val in tf.items()}
+        result.append(tfidf)
+    return result
+`,
+    hints: [
+      'TF: split the document, count each word, divide by total number of words in the document.',
+      'IDF: for each word, count how many documents contain it (document frequency), then IDF = log(N / df).',
+      'TF-IDF: for each document, multiply each word\'s TF by its IDF. Words common across all documents get low scores.',
+    ],
+    testCode: `import json, math
+results = []
+try:
+    corpus = ["the cat sat on the mat", "the dog sat on the log", "cats and dogs"]
+    tf = compute_tf("the cat sat on the mat")
+    results.append({"name": "TF of 'the' = 2/6", "passed": abs(tf["the"] - 2/6) < 1e-6, "expected": f"{2/6:.4f}", "actual": f"{tf['the']:.4f}"})
+    results.append({"name": "TF of 'cat' = 1/6", "passed": abs(tf["cat"] - 1/6) < 1e-6, "expected": f"{1/6:.4f}", "actual": f"{tf['cat']:.4f}"})
+    idf = compute_idf(corpus)
+    results.append({"name": "IDF of 'the' (in 2 docs) = log(3/2)", "passed": abs(idf["the"] - math.log(3/2)) < 1e-6, "expected": f"{math.log(3/2):.4f}", "actual": f"{idf['the']:.4f}"})
+    results.append({"name": "IDF of 'cats' (in 1 doc) = log(3)", "passed": abs(idf["cats"] - math.log(3)) < 1e-6, "expected": f"{math.log(3):.4f}", "actual": f"{idf['cats']:.4f}"})
+    tfidf = compute_tfidf(corpus)
+    results.append({"name": "TF-IDF returns list of dicts", "passed": len(tfidf) == 3 and isinstance(tfidf[0], dict), "expected": "3 dicts", "actual": f"{len(tfidf)} items"})
+except Exception as e:
+    results.append({"name": "Runtime Error", "passed": False, "error": str(e)})
+print("__TEST_RESULTS__" + json.dumps(results))
+`,
+  },
+
+  // ─── Deep-ML Inspired: Decision Tree Stump ──────────────────────────────
+  {
+    id: 'ml-decision-stump',
+    unitId: 'ml-fundamentals',
+    title: 'Decision Tree Stump (Gini Impurity)',
+    description:
+      'Implement a decision stump — a single-level decision tree that finds the best feature and threshold to split data, using Gini impurity as the splitting criterion.',
+    difficulty: 'hard',
+    starterCode: `def gini_impurity(labels):
+    """Compute Gini impurity of a list of labels.
+
+    Gini = 1 - sum(p_i^2 for each class i)
+
+    Args:
+        labels: list of class labels
+    Returns:
+        float: Gini impurity (0 = pure, 0.5 = max for binary)
+    """
+    # TODO: implement
+    pass
+
+def best_split(X, y):
+    """Find the best feature and threshold to split the data.
+
+    Try every feature and every midpoint between sorted unique values.
+    Choose the split that minimizes weighted Gini impurity of the children.
+
+    Args:
+        X: list of feature vectors (list of lists)
+        y: list of labels
+    Returns:
+        (best_feature_index, best_threshold, best_gini)
+    """
+    # TODO: implement
+    pass
+`,
+    solutionCode: `def gini_impurity(labels):
+    n = len(labels)
+    if n == 0:
+        return 0.0
+    counts = {}
+    for label in labels:
+        counts[label] = counts.get(label, 0) + 1
+    return 1 - sum((c / n) ** 2 for c in counts.values())
+
+def best_split(X, y):
+    n = len(y)
+    n_features = len(X[0])
+    best_feat = 0
+    best_thresh = 0
+    best_gini = float('inf')
+    for feat in range(n_features):
+        values = sorted(set(row[feat] for row in X))
+        for i in range(len(values) - 1):
+            threshold = (values[i] + values[i + 1]) / 2
+            left_y = [y[j] for j in range(n) if X[j][feat] <= threshold]
+            right_y = [y[j] for j in range(n) if X[j][feat] > threshold]
+            if not left_y or not right_y:
+                continue
+            weighted_gini = (len(left_y) / n) * gini_impurity(left_y) + (len(right_y) / n) * gini_impurity(right_y)
+            if weighted_gini < best_gini:
+                best_gini = weighted_gini
+                best_feat = feat
+                best_thresh = threshold
+    return best_feat, best_thresh, best_gini
+`,
+    hints: [
+      'Gini impurity: count frequency of each class, compute p_i = count_i / total, then 1 - sum(p_i^2).',
+      'For each feature, sort unique values and try midpoints as thresholds.',
+      'Weighted Gini = (n_left/n) * gini(left) + (n_right/n) * gini(right). Find the split with the lowest.',
+    ],
+    testCode: `import json
+results = []
+try:
+    g = gini_impurity([0, 0, 0])
+    results.append({"name": "Pure set → Gini=0", "passed": abs(g) < 1e-6, "expected": "0.0", "actual": f"{g:.4f}"})
+    g = gini_impurity([0, 1])
+    results.append({"name": "50/50 binary → Gini=0.5", "passed": abs(g - 0.5) < 1e-6, "expected": "0.5", "actual": f"{g:.4f}"})
+    g = gini_impurity([0, 1, 2])
+    expected_g = 1 - 3 * (1/3)**2
+    results.append({"name": "3-class uniform", "passed": abs(g - expected_g) < 1e-6, "expected": f"{expected_g:.4f}", "actual": f"{g:.4f}"})
+    X = [[1], [2], [3], [4], [5], [6]]
+    y = [0, 0, 0, 1, 1, 1]
+    feat, thresh, gini = best_split(X, y)
+    results.append({"name": "Perfect split found", "passed": abs(gini) < 1e-6, "expected": "0.0", "actual": f"{gini:.4f}"})
+    results.append({"name": "Threshold between 3 and 4", "passed": 3 < thresh < 4, "expected": "3.5", "actual": f"{thresh:.1f}"})
+except Exception as e:
+    results.append({"name": "Runtime Error", "passed": False, "error": str(e)})
+print("__TEST_RESULTS__" + json.dumps(results))
+`,
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SQL CODING CHALLENGES — run via Pyodide's built-in sqlite3 module
+  // Each challenge has language: 'sql' and a setupCode with DDL + seed data.
+  // Test code is Python that uses `user_sql` (string) and `_setup_db()` helper.
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ─── SQL 1: Duplicate Emails (Easy) ─────────────────────────────────────
+  {
+    id: 'sql-duplicate-emails',
+    unitId: 'sql-data',
+    language: 'sql',
+    title: 'Find Duplicate Emails',
+    description:
+      'Write a SQL query to find all email addresses that appear more than once in the emails table. Return the email and the number of times it appears, ordered by count descending.',
+    difficulty: 'easy',
+    setupCode: `CREATE TABLE emails (
+  id INTEGER PRIMARY KEY,
+  email TEXT NOT NULL
+);
+
+INSERT INTO emails VALUES (1, 'alice@example.com');
+INSERT INTO emails VALUES (2, 'bob@example.com');
+INSERT INTO emails VALUES (3, 'alice@example.com');
+INSERT INTO emails VALUES (4, 'charlie@example.com');
+INSERT INTO emails VALUES (5, 'bob@example.com');
+INSERT INTO emails VALUES (6, 'bob@example.com');`,
+    starterCode: `-- Find emails that appear more than once.
+-- Return columns: email, count
+-- Order by count descending.
+
+SELECT`,
+    solutionCode: `SELECT email, COUNT(*) as count
+FROM emails
+GROUP BY email
+HAVING COUNT(*) > 1
+ORDER BY count DESC;`,
+    hints: [
+      'Use GROUP BY on the email column to group rows by email address.',
+      'Use HAVING COUNT(*) > 1 to filter groups where the email appears more than once.',
+      'Use ORDER BY count DESC (or ORDER BY COUNT(*) DESC) to sort by frequency.',
+    ],
+    testCode: `results = []
+try:
+    conn = _setup_db()
+    cur = conn.cursor()
+    cur.execute(user_sql)
+    rows = cur.fetchall()
+    cols = [desc[0].lower() for desc in cur.description]
+
+    results.append({"name": "Query executes without error", "passed": True, "expected": "no error", "actual": "no error"})
+
+    results.append({"name": "Returns exactly 2 duplicate emails", "passed": len(rows) == 2, "expected": "2 rows", "actual": f"{len(rows)} rows"})
+
+    emails_found = [r[0] for r in rows]
+    results.append({"name": "Includes bob@example.com", "passed": "bob@example.com" in emails_found, "expected": "bob@example.com present", "actual": str(emails_found)})
+    results.append({"name": "Includes alice@example.com", "passed": "alice@example.com" in emails_found, "expected": "alice@example.com present", "actual": str(emails_found)})
+
+    bob_row = [r for r in rows if r[0] == 'bob@example.com']
+    results.append({"name": "bob@example.com count is 3", "passed": len(bob_row) == 1 and bob_row[0][1] == 3, "expected": "3", "actual": str(bob_row[0][1]) if bob_row else "not found"})
+
+    results.append({"name": "Ordered by count descending", "passed": len(rows) >= 2 and rows[0][1] >= rows[1][1], "expected": "descending order", "actual": f"first={rows[0][1]}, second={rows[1][1]}" if len(rows) >= 2 else "too few rows"})
+
+    conn.close()
+except Exception as e:
+    results.append({"name": "Query execution", "passed": False, "error": str(e)})
+print("__TEST_RESULTS__" + json.dumps(results))
+`,
+  },
+
+  // ─── SQL 2: Second Highest Salary (Medium) ──────────────────────────────
+  {
+    id: 'sql-second-highest-salary',
+    unitId: 'sql-data',
+    language: 'sql',
+    title: 'Second Highest Salary',
+    description:
+      'Write a SQL query to find the second highest distinct salary from the employees table. Return it as a column named "second_highest_salary". If there is no second highest salary, the query should still return one row with NULL.',
+    difficulty: 'medium',
+    setupCode: `CREATE TABLE employees (
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL,
+  salary INTEGER NOT NULL
+);
+
+INSERT INTO employees VALUES (1, 'Alice', 100000);
+INSERT INTO employees VALUES (2, 'Bob', 120000);
+INSERT INTO employees VALUES (3, 'Carol', 120000);
+INSERT INTO employees VALUES (4, 'Dave', 90000);
+INSERT INTO employees VALUES (5, 'Eve', 110000);`,
+    starterCode: `-- Find the second highest DISTINCT salary.
+-- Return column: second_highest_salary
+-- If no second highest exists, return NULL.
+
+SELECT`,
+    solutionCode: `SELECT MAX(salary) AS second_highest_salary
+FROM employees
+WHERE salary < (SELECT MAX(salary) FROM employees);`,
+    hints: [
+      'The highest salary is MAX(salary). The second highest is the MAX of everything below that.',
+      'Use a subquery: WHERE salary < (SELECT MAX(salary) FROM employees).',
+      'Using MAX() on an empty result set returns NULL automatically, handling the edge case.',
+    ],
+    testCode: `results = []
+try:
+    conn = _setup_db()
+    cur = conn.cursor()
+    cur.execute(user_sql)
+    rows = cur.fetchall()
+    cols = [desc[0].lower() for desc in cur.description]
+
+    results.append({"name": "Query executes without error", "passed": True, "expected": "no error", "actual": "no error"})
+
+    results.append({"name": "Returns exactly 1 row", "passed": len(rows) == 1, "expected": "1 row", "actual": f"{len(rows)} rows"})
+
+    has_col = any("second" in c and "salary" in c for c in cols)
+    results.append({"name": "Column named second_highest_salary", "passed": has_col, "expected": "second_highest_salary", "actual": ", ".join(cols)})
+
+    val = rows[0][0] if rows else None
+    results.append({"name": "Second highest salary is 110000", "passed": val == 110000, "expected": "110000", "actual": str(val)})
+
+    # Edge case: test with only one distinct salary
+    cur.execute("DELETE FROM employees WHERE salary != 120000")
+    conn.commit()
+    cur.execute(user_sql)
+    edge_rows = cur.fetchall()
+    edge_val = edge_rows[0][0] if edge_rows else "no rows"
+    results.append({"name": "Returns NULL when no second highest", "passed": edge_val is None, "expected": "None/NULL", "actual": str(edge_val)})
+
+    conn.close()
+except Exception as e:
+    results.append({"name": "Query execution", "passed": False, "error": str(e)})
+print("__TEST_RESULTS__" + json.dumps(results))
+`,
+  },
+
+  // ─── SQL 3: Department Top Earners (Medium) ─────────────────────────────
+  {
+    id: 'sql-dept-top-earners',
+    unitId: 'sql-data',
+    language: 'sql',
+    title: 'Top Earner in Each Department',
+    description:
+      'Write a SQL query to find the employee with the highest salary in each department. Return columns: department, name, salary. Order by department name alphabetically.',
+    difficulty: 'medium',
+    setupCode: `CREATE TABLE dept_employees (
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL,
+  department TEXT NOT NULL,
+  salary INTEGER NOT NULL
+);
+
+INSERT INTO dept_employees VALUES (1, 'Alice', 'Engineering', 120000);
+INSERT INTO dept_employees VALUES (2, 'Bob', 'Engineering', 100000);
+INSERT INTO dept_employees VALUES (3, 'Carol', 'Engineering', 115000);
+INSERT INTO dept_employees VALUES (4, 'Dave', 'Marketing', 90000);
+INSERT INTO dept_employees VALUES (5, 'Eve', 'Marketing', 95000);
+INSERT INTO dept_employees VALUES (6, 'Frank', 'Sales', 85000);`,
+    starterCode: `-- Find the highest-paid employee in each department.
+-- Return columns: department, name, salary
+-- Order by department alphabetically.
+
+SELECT`,
+    solutionCode: `SELECT e.department, e.name, e.salary
+FROM dept_employees e
+WHERE e.salary = (
+    SELECT MAX(salary) FROM dept_employees
+    WHERE department = e.department
+)
+ORDER BY e.department;`,
+    hints: [
+      'You need the maximum salary within each department — a correlated subquery or a self-join can achieve this.',
+      'Correlated subquery approach: WHERE salary = (SELECT MAX(salary) FROM dept_employees WHERE department = e.department).',
+      'Alternatively, join against a subquery that computes MAX(salary) GROUP BY department.',
+    ],
+    testCode: `results = []
+try:
+    conn = _setup_db()
+    cur = conn.cursor()
+    cur.execute(user_sql)
+    rows = cur.fetchall()
+    cols = [desc[0].lower() for desc in cur.description]
+
+    results.append({"name": "Query executes without error", "passed": True, "expected": "no error", "actual": "no error"})
+
+    results.append({"name": "Returns 3 rows (one per department)", "passed": len(rows) == 3, "expected": "3 rows", "actual": f"{len(rows)} rows"})
+
+    depts = [r[0] for r in rows]
+    results.append({"name": "All departments represented", "passed": set(depts) == {"Engineering", "Marketing", "Sales"}, "expected": "Engineering, Marketing, Sales", "actual": str(depts)})
+
+    eng_row = [r for r in rows if r[0] == 'Engineering']
+    results.append({"name": "Engineering top earner is Alice (120000)", "passed": len(eng_row) == 1 and eng_row[0][1] == 'Alice' and eng_row[0][2] == 120000, "expected": "Alice, 120000", "actual": f"{eng_row[0][1]}, {eng_row[0][2]}" if eng_row else "not found"})
+
+    mkt_row = [r for r in rows if r[0] == 'Marketing']
+    results.append({"name": "Marketing top earner is Eve (95000)", "passed": len(mkt_row) == 1 and mkt_row[0][1] == 'Eve' and mkt_row[0][2] == 95000, "expected": "Eve, 95000", "actual": f"{mkt_row[0][1]}, {mkt_row[0][2]}" if mkt_row else "not found"})
+
+    results.append({"name": "Ordered by department alphabetically", "passed": depts == sorted(depts), "expected": "alphabetical order", "actual": str(depts)})
+
+    conn.close()
+except Exception as e:
+    results.append({"name": "Query execution", "passed": False, "error": str(e)})
+print("__TEST_RESULTS__" + json.dumps(results))
+`,
+  },
+
+  // ─── SQL 4: Running Total / Cumulative Sum (Medium) ─────────────────────
+  {
+    id: 'sql-running-total',
+    unitId: 'sql-data',
+    language: 'sql',
+    title: 'Cumulative Revenue (Running Total)',
+    description:
+      'Write a SQL query to calculate a running total of daily sales revenue, ordered by date. Return columns: sale_date, amount, running_total.',
+    difficulty: 'medium',
+    setupCode: `CREATE TABLE daily_sales (
+  sale_date TEXT NOT NULL,
+  amount INTEGER NOT NULL
+);
+
+INSERT INTO daily_sales VALUES ('2024-01-01', 100);
+INSERT INTO daily_sales VALUES ('2024-01-02', 200);
+INSERT INTO daily_sales VALUES ('2024-01-03', 150);
+INSERT INTO daily_sales VALUES ('2024-01-04', 300);
+INSERT INTO daily_sales VALUES ('2024-01-05', 250);`,
+    starterCode: `-- Calculate a running total of sales ordered by date.
+-- Return columns: sale_date, amount, running_total
+-- Hint: use a window function.
+
+SELECT`,
+    solutionCode: `SELECT
+    sale_date,
+    amount,
+    SUM(amount) OVER (ORDER BY sale_date) AS running_total
+FROM daily_sales
+ORDER BY sale_date;`,
+    hints: [
+      'A window function lets you compute an aggregate (like SUM) over a "window" of rows without collapsing them.',
+      'SUM(amount) OVER (ORDER BY sale_date) computes a cumulative sum from the first row up to the current row.',
+      'Make sure to ORDER BY sale_date in both the window clause and the outer query.',
+    ],
+    testCode: `results = []
+try:
+    conn = _setup_db()
+    cur = conn.cursor()
+    cur.execute(user_sql)
+    rows = cur.fetchall()
+    cols = [desc[0].lower() for desc in cur.description]
+
+    results.append({"name": "Query executes without error", "passed": True, "expected": "no error", "actual": "no error"})
+
+    results.append({"name": "Returns 5 rows", "passed": len(rows) == 5, "expected": "5 rows", "actual": f"{len(rows)} rows"})
+
+    has_rt = any("running" in c or "cumul" in c or "total" in c for c in cols)
+    results.append({"name": "Has running_total column", "passed": has_rt, "expected": "running_total column", "actual": ", ".join(cols)})
+
+    expected_totals = [100, 300, 450, 750, 1000]
+    actual_totals = [r[2] for r in rows] if len(rows) >= 5 else []
+    results.append({"name": "First running total = 100", "passed": len(actual_totals) >= 1 and actual_totals[0] == 100, "expected": "100", "actual": str(actual_totals[0]) if actual_totals else "no data"})
+
+    results.append({"name": "Third running total = 450", "passed": len(actual_totals) >= 3 and actual_totals[2] == 450, "expected": "450", "actual": str(actual_totals[2]) if len(actual_totals) >= 3 else "no data"})
+
+    results.append({"name": "Final running total = 1000", "passed": len(actual_totals) >= 5 and actual_totals[4] == 1000, "expected": "1000", "actual": str(actual_totals[4]) if len(actual_totals) >= 5 else "no data"})
+
+    conn.close()
+except Exception as e:
+    results.append({"name": "Query execution", "passed": False, "error": str(e)})
+print("__TEST_RESULTS__" + json.dumps(results))
+`,
+  },
+
+  // ─── SQL 5: User Retention (Hard) ───────────────────────────────────────
+  {
+    id: 'sql-user-retention',
+    unitId: 'sql-data',
+    language: 'sql',
+    title: 'Monthly User Retention',
+    description:
+      'Write a SQL query to find users who were active in BOTH January 2024 and February 2024 (retained users). Return the user_id column only, ordered by user_id ascending.',
+    difficulty: 'hard',
+    setupCode: `CREATE TABLE user_activity (
+  user_id INTEGER NOT NULL,
+  activity_date TEXT NOT NULL
+);
+
+INSERT INTO user_activity VALUES (1, '2024-01-15');
+INSERT INTO user_activity VALUES (1, '2024-02-10');
+INSERT INTO user_activity VALUES (1, '2024-03-05');
+INSERT INTO user_activity VALUES (2, '2024-01-20');
+INSERT INTO user_activity VALUES (2, '2024-03-15');
+INSERT INTO user_activity VALUES (3, '2024-02-01');
+INSERT INTO user_activity VALUES (3, '2024-02-15');
+INSERT INTO user_activity VALUES (3, '2024-03-01');
+INSERT INTO user_activity VALUES (4, '2024-01-01');
+INSERT INTO user_activity VALUES (4, '2024-02-28');
+INSERT INTO user_activity VALUES (5, '2024-01-10');`,
+    starterCode: `-- Find users active in BOTH January 2024 AND February 2024.
+-- Return column: user_id
+-- Order by user_id ascending.
+-- Hint: SQLite date function strftime('%Y-%m', date) extracts year-month.
+
+SELECT`,
+    solutionCode: `SELECT DISTINCT a.user_id
+FROM user_activity a
+INNER JOIN user_activity b
+  ON a.user_id = b.user_id
+WHERE strftime('%Y-%m', a.activity_date) = '2024-01'
+  AND strftime('%Y-%m', b.activity_date) = '2024-02'
+ORDER BY a.user_id;`,
+    hints: [
+      'You need to find users present in two different months — a self-join or INTERSECT can achieve this.',
+      'Self-join: JOIN user_activity a with user_activity b ON a.user_id = b.user_id, filtering a for Jan and b for Feb.',
+      'Use strftime(\'%Y-%m\', activity_date) to extract year-month in SQLite. Use DISTINCT to avoid duplicate user_ids.',
+    ],
+    testCode: `results = []
+try:
+    conn = _setup_db()
+    cur = conn.cursor()
+    cur.execute(user_sql)
+    rows = cur.fetchall()
+    cols = [desc[0].lower() for desc in cur.description]
+
+    results.append({"name": "Query executes without error", "passed": True, "expected": "no error", "actual": "no error"})
+
+    user_ids = [r[0] for r in rows]
+    results.append({"name": "Returns exactly 2 retained users", "passed": len(user_ids) == 2, "expected": "2 rows", "actual": f"{len(user_ids)} rows"})
+
+    results.append({"name": "User 1 is retained (active Jan + Feb)", "passed": 1 in user_ids, "expected": "user_id 1 present", "actual": str(user_ids)})
+
+    results.append({"name": "User 4 is retained (active Jan + Feb)", "passed": 4 in user_ids, "expected": "user_id 4 present", "actual": str(user_ids)})
+
+    results.append({"name": "User 2 NOT retained (no Feb activity)", "passed": 2 not in user_ids, "expected": "user_id 2 absent", "actual": str(user_ids)})
+
+    results.append({"name": "Ordered by user_id ascending", "passed": user_ids == sorted(user_ids), "expected": "ascending order", "actual": str(user_ids)})
+
+    conn.close()
+except Exception as e:
+    results.append({"name": "Query execution", "passed": False, "error": str(e)})
+print("__TEST_RESULTS__" + json.dumps(results))
+`,
+  },
+
   // ─── Unit 19: Time Series ─────────────────────────────────────────────────
   {
     id: 'ts-moving-average',

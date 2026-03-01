@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { api } from '../utils/api'
-import { getPyodide, runPython, runTests } from '../utils/pyodideRunner'
+import { getPyodide, runPython, runTests, runSql, runSqlTests } from '../utils/pyodideRunner'
 import {
   Heart,
   Play,
@@ -15,6 +15,9 @@ import {
   Code2,
   FlaskConical,
   Terminal,
+  Database,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -174,6 +177,9 @@ export default function CodingChallenge() {
   const [hintsRevealed, setHintsRevealed] = useState(0)
   const [showSolution, setShowSolution] = useState(false)
   const [passed, setPassed] = useState(false)
+  const [showSchema, setShowSchema] = useState(true)
+
+  const isSql = challenge?.language === 'sql'
 
   /* ─── Load challenge data ─── */
   useEffect(() => {
@@ -221,7 +227,10 @@ export default function CodingChallenge() {
     setTestResults(null)
     setActiveTab('output')
 
-    const { stdout, stderr, error: pyErr } = await runPython(code)
+    const result = isSql
+      ? await runSql(code, challenge.setupCode)
+      : await runPython(code)
+    const { stdout, stderr, error: pyErr } = result
 
     let out = ''
     if (stdout) out += stdout
@@ -231,7 +240,7 @@ export default function CodingChallenge() {
 
     setOutput(out)
     setRunning(false)
-  }, [code, pyodideReady, running])
+  }, [code, pyodideReady, running, isSql, challenge])
 
   /* ─── Grade (run tests, costs a heart if fails) ─── */
   const handleGrade = useCallback(async () => {
@@ -241,7 +250,9 @@ export default function CodingChallenge() {
     setOutput('')
     setActiveTab('tests')
 
-    const { results, stdout, error: pyErr } = await runTests(code, challenge.testCode)
+    const { results, stdout, error: pyErr } = isSql
+      ? await runSqlTests(code, challenge.setupCode, challenge.testCode)
+      : await runTests(code, challenge.testCode)
 
     if (stdout) setOutput(stdout)
 
@@ -265,7 +276,7 @@ export default function CodingChallenge() {
     }
 
     setGrading(false)
-  }, [code, pyodideReady, grading, challenge])
+  }, [code, pyodideReady, grading, challenge, isSql])
 
   /* ─── Hint ─── */
   const revealHint = () => {
@@ -407,20 +418,74 @@ export default function CodingChallenge() {
           <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${difficultyColors[challenge.difficulty]}`}>
             {challenge.difficulty}
           </span>
-          <span className="text-xs text-gray-400">Python</span>
+          {isSql ? (
+            <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300">
+              <Database className="w-3 h-3" /> SQL
+            </span>
+          ) : (
+            <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300">
+              Python
+            </span>
+          )}
         </div>
         <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
           {challenge.description}
         </p>
       </div>
 
+      {/* Database schema panel (SQL challenges only) */}
+      {isSql && challenge.setupCode && (
+        <div className="card mb-4 overflow-hidden border-2 border-sky-200 dark:border-sky-800 bg-sky-50/50 dark:bg-sky-900/10">
+          <button
+            onClick={() => setShowSchema((s) => !s)}
+            className="w-full flex items-center gap-2 px-5 py-3 text-sm font-bold text-sky-700 dark:text-sky-300 hover:bg-sky-100/50 dark:hover:bg-sky-900/20 transition-colors"
+          >
+            <Database className="w-4 h-4" />
+            <span>Pre-populated Sample Data</span>
+            <span className="text-xs font-normal text-sky-500 dark:text-sky-400 ml-1">(schema + rows already loaded)</span>
+            {showSchema ? <ChevronDown className="w-4 h-4 ml-auto" /> : <ChevronRight className="w-4 h-4 ml-auto" />}
+          </button>
+          <AnimatePresence>
+            {showSchema && (
+              <motion.div
+                initial={{ height: 0 }}
+                animate={{ height: 'auto' }}
+                exit={{ height: 0 }}
+                className="overflow-hidden"
+              >
+                <pre className="text-xs font-mono bg-gray-950 text-sky-300 px-5 py-4 overflow-x-auto leading-relaxed border-t border-sky-200 dark:border-sky-800">
+                  {challenge.setupCode}
+                </pre>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
+
       {/* Pyodide loading banner */}
       {pyodideLoading && (
         <div className="flex items-center gap-3 p-4 mb-4 rounded-xl bg-blue-50 dark:bg-blue-900/15 border border-blue-200 dark:border-blue-800">
           <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
           <span className="text-sm text-blue-700 dark:text-blue-300">
-            Loading Python engine (first load may take a few seconds)…
+            Loading {isSql ? 'SQL' : 'Python'} engine (first load may take a few seconds)…
           </span>
+        </div>
+      )}
+
+      {/* SQL quick-start instructions */}
+      {isSql && (
+        <div className="mb-4 rounded-xl border border-sky-200 dark:border-sky-800 bg-sky-50/60 dark:bg-sky-900/10 px-5 py-4 text-sm text-sky-800 dark:text-sky-200 space-y-2">
+          <p className="font-bold text-sky-700 dark:text-sky-300 flex items-center gap-2">
+            <Database className="w-4 h-4" /> How to use this SQL challenge
+          </p>
+          <ol className="list-decimal list-inside space-y-1 text-sky-700 dark:text-sky-300">
+            <li><span className="font-semibold">Write your query</span> in the editor below — sample data is already loaded for you (see "Database Schema" above).</li>
+            <li>Click <span className="font-semibold">Run</span> to execute your query and see the result table instantly.</li>
+            <li>Click <span className="font-semibold">Grade</span> to check your answer against the test suite (costs a heart if it fails).</li>
+          </ol>
+          <p className="text-xs text-sky-600 dark:text-sky-400">
+            The database is pre-populated with sample rows — no setup needed. You can modify the schema data in the "Database Schema" panel if you want to test edge cases.
+          </p>
         </div>
       )}
 
@@ -578,7 +643,9 @@ export default function CodingChallenge() {
               )}
               {!running && !output && (
                 <p className="text-gray-400 text-sm italic">
-                  Click "Run" to execute your code, or "Grade" to run tests.
+                  {isSql
+                    ? 'Click "Run" to execute your SQL query and see the result table, or "Grade" to run tests.'
+                    : 'Click "Run" to execute your code, or "Grade" to run tests.'}
                 </p>
               )}
               {output && (
