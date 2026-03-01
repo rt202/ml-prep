@@ -1,0 +1,11 @@
+{
+  "servers": {
+    "vexp": {
+      "type": "stdio",
+      "command": "/Users/ronak/.nvm/versions/node/v22.21.0/lib/node_modules/vexp-cli/node_modules/@vexp/core-darwin-arm64/bin/vexp-core",
+      "args": [
+        "mcp"
+      ]
+    }
+  }
+}

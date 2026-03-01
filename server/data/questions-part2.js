@@ -4,25 +4,25 @@ export const questionsPart2 = [
   // Lesson: ml-basics
   {
     id: 'ml-b-1', text: 'What is the bias-variance tradeoff?',
-    options: ['Choosing between accuracy and speed', 'High bias means underfitting (too simple), high variance means overfitting (too complex); the goal is to find the balance that minimizes total error', 'Bias is always bad', 'Variance only matters for large datasets'],
+    options: ['The tradeoff between model training time and inference latency; simpler models train faster but produce less optimized predictions during deployment', 'High bias means underfitting (too simple), high variance means overfitting (too complex); the goal is to find the balance that minimizes total error', 'Bias refers to systematic errors caused by skewed training data, while variance measures the spread of the target variable; both are reduced by collecting more balanced data', 'A metric for evaluating whether a model has sufficient training data; low variance indicates convergence while high bias indicates the need for more features and samples'],
     correctAnswer: 1, explanation: 'Bias measures how far off predictions are on average (underfitting). Variance measures how much predictions vary across datasets (overfitting). Total error = Bias² + Variance + Irreducible Error. The goal is minimizing this total.',
     difficulty: 'easy', roles: ['data_scientist', 'ml_engineer', 'ai_engineer'], category: 'technical', companySizes: ['startup', 'midsize', 'large', 'faang'], unitId: 'ml-fundamentals', lessonId: 'ml-basics',
   },
   {
     id: 'ml-b-2', text: 'What is the difference between supervised and unsupervised learning?',
-    options: ['Supervised is faster', 'Supervised learning uses labeled data to learn input-output mappings; unsupervised learning finds patterns in unlabeled data', 'Unsupervised is more accurate', 'They use the same algorithms'],
+    options: ['Supervised learning requires human oversight during training, while unsupervised learning runs autonomously without any human involvement or hyperparameter tuning', 'Supervised learning uses labeled data to learn input-output mappings; unsupervised learning finds patterns in unlabeled data', 'Supervised learning is used exclusively for structured tabular data, while unsupervised learning is designed for unstructured data like images and text', 'Supervised learning trains on larger datasets with more features, while unsupervised learning is optimized for smaller datasets with fewer input dimensions'],
     correctAnswer: 1, explanation: 'Supervised learning trains on labeled data (input-output pairs) for tasks like classification and regression. Unsupervised learning discovers hidden patterns in unlabeled data (clustering, dimensionality reduction, anomaly detection).',
     difficulty: 'easy', roles: ['data_scientist', 'ml_engineer', 'ai_engineer', 'mlops_engineer'], category: 'technical', companySizes: ['startup', 'midsize', 'large', 'faang'], unitId: 'ml-fundamentals', lessonId: 'ml-basics',
   },
   {
     id: 'ml-b-3', text: 'What is overfitting and how can it be prevented?',
-    options: ['Training error is too high', 'When a model learns noise in training data rather than the underlying pattern, leading to poor generalization; prevented by regularization, cross-validation, more data, or simpler models', 'Overfitting improves accuracy', 'It only occurs with neural networks'],
+    options: ['When the model fails to capture patterns due to insufficient training time, leading to high training error; prevented by training longer and using deeper architectures', 'When a model learns noise in training data rather than the underlying pattern, leading to poor generalization; prevented by regularization, cross-validation, more data, or simpler models', 'When training and validation errors both remain high because the model has too many constraints; prevented by removing regularization and increasing model capacity', 'When the model converges to a local minimum during gradient descent, producing suboptimal parameters; prevented by using adaptive learning rates and momentum-based optimizers'],
     correctAnswer: 1, explanation: 'Overfitting occurs when a model memorizes training data (including noise) and fails to generalize. Prevention strategies include: regularization (L1/L2), cross-validation, early stopping, dropout, data augmentation, and using simpler models.',
     difficulty: 'easy', roles: ['data_scientist', 'ml_engineer', 'ai_engineer'], category: 'technical', companySizes: ['startup', 'midsize', 'large', 'faang'], unitId: 'ml-fundamentals', lessonId: 'ml-basics',
   },
   {
     id: 'ml-b-4', text: 'What is regularization and why is it used?',
-    options: ['Making data regular', 'Adding a penalty term to the loss function to discourage complex models and prevent overfitting', 'A data preprocessing step', 'Normalizing input features'],
+    options: ['Rescaling model weights to have unit norm after each gradient update, ensuring stable convergence during the optimization process', 'Adding a penalty term to the loss function to discourage complex models and prevent overfitting', 'A preprocessing technique that transforms input features into a standard Gaussian distribution before model training begins', 'Constraining the learning rate to decrease proportionally with the number of parameters, preventing divergence in large models'],
     correctAnswer: 1, explanation: 'Regularization adds a penalty to the loss function based on model complexity. L1 (Lasso) adds |w|, promoting sparsity. L2 (Ridge) adds w², promoting small weights. Both reduce overfitting by constraining the model.',
     difficulty: 'medium', roles: ['data_scientist', 'ml_engineer', 'ai_engineer'], category: 'technical', companySizes: ['startup', 'midsize', 'large', 'faang'], unitId: 'ml-fundamentals', lessonId: 'ml-basics',
   },
@@ -34,7 +34,7 @@ export const questionsPart2 = [
   },
   {
     id: 'ml-b-6', text: 'What is the curse of dimensionality?',
-    options: ['Having too many data points', 'As the number of features increases, the data becomes increasingly sparse, making it harder to find patterns and requiring exponentially more data', 'Neural networks being too deep', 'Memory constraints in computing'],
+    options: ['When the training dataset is too large for the model to process efficiently, causing excessive computation time and diminishing returns on accuracy', 'As the number of features increases, the data becomes increasingly sparse, making it harder to find patterns and requiring exponentially more data', 'When a neural network has too many layers, causing activation values to become unstable and training to diverge or converge very slowly', 'When feature values have very different scales, causing gradient-based optimizers to oscillate and requiring careful normalization before training'],
     correctAnswer: 1, explanation: 'In high dimensions, data points become sparse, distance metrics become less meaningful, and models need exponentially more data to generalize. This is why dimensionality reduction (PCA, feature selection) is important.',
     difficulty: 'medium', roles: ['data_scientist', 'ml_engineer', 'ai_engineer'], category: 'technical', companySizes: ['midsize', 'large', 'faang'], unitId: 'ml-fundamentals', lessonId: 'ml-basics',
   },
@@ -46,19 +46,19 @@ export const questionsPart2 = [
   },
   {
     id: 'ml-b-8', text: 'What is the difference between a generative and discriminative model?',
-    options: ['Generative models are always better', 'Generative models learn P(X,Y) and can generate new data; discriminative models learn P(Y|X) directly to make predictions', 'Discriminative models can generate data', 'They are the same'],
+    options: ['Generative models are trained on synthetic data to produce realistic outputs, while discriminative models are trained on real data to distinguish between real and fake samples', 'Generative models learn P(X,Y) and can generate new data; discriminative models learn P(Y|X) directly to make predictions', 'Discriminative models learn the full data distribution P(X) to generate new samples, while generative models learn decision boundaries for classification tasks', 'Generative models require labeled data for supervised tasks, while discriminative models work exclusively with unlabeled data in unsupervised settings'],
     correctAnswer: 1, explanation: 'Generative models (Naive Bayes, GANs, VAEs) model the joint distribution P(X,Y) and can generate new samples. Discriminative models (Logistic Regression, SVMs, Neural Nets) model P(Y|X) directly, often achieving better classification accuracy.',
     difficulty: 'medium', roles: ['data_scientist', 'ml_engineer', 'ai_engineer'], category: 'technical', companySizes: ['midsize', 'large', 'faang'], unitId: 'ml-fundamentals', lessonId: 'ml-basics',
   },
   {
     id: 'ml-b-9', text: 'What is semi-supervised learning?',
-    options: ['Using half the training data', 'A learning paradigm that uses a small amount of labeled data combined with a large amount of unlabeled data', 'Training for half the epochs', 'Supervised learning with validation'],
+    options: ['A training approach where the model alternates between supervised and unsupervised objectives each epoch, switching loss functions at the midpoint of training', 'A learning paradigm that uses a small amount of labeled data combined with a large amount of unlabeled data', 'A technique where two separate models are trained—one supervised and one unsupervised—and their predictions are averaged for the final output', 'A variant of supervised learning where the model is first pre-trained with weak labels generated by heuristic rules, then fine-tuned on the original task'],
     correctAnswer: 1, explanation: 'Semi-supervised learning leverages both labeled and unlabeled data. Common approaches include self-training, co-training, and graph-based methods. It is useful when labeling data is expensive but unlabeled data is abundant.',
     difficulty: 'medium', roles: ['data_scientist', 'ml_engineer', 'ai_engineer'], category: 'technical', companySizes: ['midsize', 'large', 'faang'], unitId: 'ml-fundamentals', lessonId: 'ml-basics',
   },
   {
     id: 'ml-b-10', text: 'What is transfer learning?',
-    options: ['Moving data between databases', 'Using a model trained on one task as a starting point for a different but related task, leveraging learned representations', 'Transferring features manually', 'A type of data augmentation'],
+    options: ['Converting a model architecture from one framework to another (e.g., PyTorch to TensorFlow), preserving the computational graph and layer definitions', 'Using a model trained on one task as a starting point for a different but related task, leveraging learned representations', 'Manually selecting and copying the most important learned features from one model into another model with a different architecture', 'A technique that replicates training data across multiple distributed nodes, allowing each node to learn features specific to its data partition'],
     correctAnswer: 1, explanation: 'Transfer learning reuses a model pre-trained on a large dataset (e.g., ImageNet, large text corpora) as initialization for a new task. It is especially useful when the target dataset is small. Fine-tuning adjusts the pre-trained weights for the new task.',
     difficulty: 'easy', roles: ['data_scientist', 'ml_engineer', 'ai_engineer'], category: 'technical', companySizes: ['startup', 'midsize', 'large', 'faang'], unitId: 'ml-fundamentals', lessonId: 'ml-basics',
   },
@@ -66,7 +66,7 @@ export const questionsPart2 = [
   // Lesson: regression
   {
     id: 'reg-1', text: 'What are the assumptions of linear regression?',
-    options: ['No assumptions needed', 'Linearity, independence of errors, homoscedasticity (constant variance), normality of residuals, no multicollinearity', 'Only requires large data', 'Data must be standardized'],
+    options: ['Linear regression is a non-parametric method that makes no distributional assumptions, requiring only sufficient data to estimate the relationship between variables', 'Linearity, independence of errors, homoscedasticity (constant variance), normality of residuals, no multicollinearity', 'The only requirement is a sufficiently large dataset; with enough samples, the central limit theorem ensures accurate coefficient estimates regardless of data distribution', 'All features must be standardized to zero mean and unit variance, and the target variable must follow a uniform distribution for valid coefficient estimation'],
     correctAnswer: 1, explanation: 'Key assumptions: (1) Linear relationship between X and Y, (2) Independence of residuals, (3) Homoscedasticity (constant error variance), (4) Normally distributed residuals, (5) No perfect multicollinearity among predictors.',
     difficulty: 'medium', roles: ['data_scientist', 'ml_engineer'], category: 'technical', companySizes: ['startup', 'midsize', 'large', 'faang'], unitId: 'ml-fundamentals', lessonId: 'regression',
   },
@@ -102,7 +102,7 @@ export const questionsPart2 = [
   },
   {
     id: 'reg-7', text: 'What is heteroscedasticity and why is it a problem?',
-    options: ['A type of feature', 'When the variance of residuals is not constant across levels of the predictor, violating regression assumptions and leading to inefficient estimates', 'A data collection method', 'A type of overfitting'],
+    options: ['When the residuals of a regression model are correlated with each other across observations, violating the independence assumption and biasing coefficient estimates', 'When the variance of residuals is not constant across levels of the predictor, violating regression assumptions and leading to inefficient estimates', 'When the residuals follow a non-normal distribution such as a skewed or heavy-tailed distribution, invalidating confidence intervals and hypothesis tests', 'When predictor variables are highly correlated with each other, inflating the variance of coefficient estimates and making individual effects difficult to isolate'],
     correctAnswer: 1, explanation: 'Heteroscedasticity means residual variance changes across values of X. This violates the homoscedasticity assumption, making OLS estimates unbiased but inefficient, and standard errors unreliable. Solutions include weighted least squares or robust standard errors.',
     difficulty: 'hard', roles: ['data_scientist', 'ml_engineer'], category: 'technical', companySizes: ['large', 'faang'], unitId: 'ml-fundamentals', lessonId: 'regression',
   },
@@ -146,7 +146,7 @@ export const questionsPart2 = [
   },
   {
     id: 'cls-4', text: 'What is a Support Vector Machine (SVM)?',
-    options: ['A type of neural network', 'A classifier that finds the optimal hyperplane maximizing the margin between classes, with support vectors being the closest points to the boundary', 'A clustering algorithm', 'A dimensionality reduction technique'],
+    options: ['A multi-layer perceptron architecture that uses vector quantization to map input features into discrete categories for efficient classification', 'A classifier that finds the optimal hyperplane maximizing the margin between classes, with support vectors being the closest points to the boundary', 'A probabilistic classifier that estimates class-conditional density functions and assigns samples to the cluster with highest posterior probability', 'A technique that projects high-dimensional data onto principal axes of maximum variance while simultaneously performing classification in the reduced space'],
     correctAnswer: 1, explanation: 'SVM finds the hyperplane that maximizes the margin (distance) between the nearest points of different classes (support vectors). It can handle nonlinear boundaries using kernel functions (RBF, polynomial) that map data to higher dimensions.',
     difficulty: 'medium', roles: ['data_scientist', 'ml_engineer', 'ai_engineer'], category: 'technical', companySizes: ['startup', 'midsize', 'large', 'faang'], unitId: 'ml-fundamentals', lessonId: 'classification',
   },
@@ -190,7 +190,7 @@ export const questionsPart2 = [
   // Lesson: ensemble-methods
   {
     id: 'ens-1', text: 'What is bagging (Bootstrap Aggregating)?',
-    options: ['A data collection method', 'Training multiple models on random bootstrap samples of the data and averaging their predictions to reduce variance', 'A feature selection technique', 'A type of gradient descent'],
+    options: ['A technique that sequentially trains weak learners, where each new model corrects the errors made by the previous models in the ensemble', 'Training multiple models on random bootstrap samples of the data and averaging their predictions to reduce variance', 'A method that selects the most informative features by iteratively training models and removing low-importance variables from the feature set', 'An approach that partitions the feature space into clusters and trains a specialized model for each cluster to handle different data distributions'],
     correctAnswer: 1, explanation: 'Bagging creates multiple bootstrap samples (sampling with replacement), trains a model on each, and aggregates predictions (averaging for regression, majority vote for classification). It reduces variance and helps prevent overfitting. Random Forest uses bagging.',
     difficulty: 'medium', roles: ['data_scientist', 'ml_engineer', 'ai_engineer'], category: 'technical', companySizes: ['startup', 'midsize', 'large', 'faang'], unitId: 'ml-fundamentals', lessonId: 'ensemble-methods',
   },
@@ -202,7 +202,7 @@ export const questionsPart2 = [
   },
   {
     id: 'ens-3', text: 'What is gradient boosting?',
-    options: ['Making gradient descent faster', 'Sequentially training weak learners where each new model focuses on correcting the errors (residuals) of the combined ensemble so far', 'A type of data augmentation', 'Random Forest with more trees'],
+    options: ['An optimization technique that accelerates gradient descent by adapting the learning rate for each parameter based on historical gradient magnitudes', 'Sequentially training weak learners where each new model focuses on correcting the errors (residuals) of the combined ensemble so far', 'Training multiple independent models in parallel on augmented versions of the data and combining their predictions through majority voting', 'An extension of Random Forest that uses deeper trees and more estimators, with each tree trained on the full dataset rather than bootstrap samples'],
     correctAnswer: 1, explanation: 'Gradient boosting builds models sequentially. Each new model fits the negative gradient (residuals) of the loss function. The final prediction is a sum of all models. Popular implementations: XGBoost, LightGBM, CatBoost.',
     difficulty: 'medium', roles: ['data_scientist', 'ml_engineer', 'ai_engineer'], category: 'technical', companySizes: ['startup', 'midsize', 'large', 'faang'], unitId: 'ml-fundamentals', lessonId: 'ensemble-methods',
   },
@@ -220,7 +220,7 @@ export const questionsPart2 = [
   },
   {
     id: 'ens-6', text: 'What is stacking (stacked generalization)?',
-    options: ['Stacking data vertically', 'Using predictions from multiple base models as features for a meta-learner that combines them optimally', 'Running the same model multiple times', 'A data preprocessing technique'],
+    options: ['Concatenating training data from multiple sources vertically to create a larger unified dataset for improved model generalization', 'Using predictions from multiple base models as features for a meta-learner that combines them optimally', 'Training the same model architecture multiple times with different random seeds and averaging their predictions to reduce variance', 'Layering multiple feature transformations sequentially, where each transformation preprocesses the data before passing it to the next training stage'],
     correctAnswer: 1, explanation: 'Stacking trains diverse base models, then uses their predictions as input features for a meta-learner (often logistic regression or simple model). This allows the meta-learner to learn the optimal way to combine the base models.',
     difficulty: 'hard', roles: ['data_scientist', 'ml_engineer'], category: 'technical', companySizes: ['large', 'faang'], unitId: 'ml-fundamentals', lessonId: 'ensemble-methods',
   },
@@ -259,7 +259,7 @@ export const questionsPart2 = [
   },
   {
     id: 'nn-2', text: 'What is backpropagation?',
-    options: ['Training data flowing backwards', 'An algorithm that computes gradients of the loss with respect to each weight by applying the chain rule from output to input layers', 'A type of regularization', 'Forward propagation in reverse order'],
+    options: ['A technique where mislabeled or hard-to-classify training examples are recycled through the network multiple times to improve learning on difficult cases', 'An algorithm that computes gradients of the loss with respect to each weight by applying the chain rule from output to input layers', 'A regularization method that penalizes the magnitude of gradients during training, preventing the network from developing overly sharp decision boundaries', 'Reversing the order of layer computations during inference, processing the output layer first and propagating activations backward to reconstruct the input'],
     correctAnswer: 1, explanation: 'Backpropagation efficiently computes gradients using the chain rule. During the forward pass, activations are computed and stored. During the backward pass, gradients flow from the loss back through the network, enabling gradient-based optimization.',
     difficulty: 'medium', roles: ['data_scientist', 'ml_engineer', 'ai_engineer'], category: 'technical', companySizes: ['startup', 'midsize', 'large', 'faang'], unitId: 'deep-learning', lessonId: 'nn-basics',
   },
@@ -289,7 +289,7 @@ export const questionsPart2 = [
   },
   {
     id: 'nn-7', text: 'What is the dying ReLU problem?',
-    options: ['ReLU is being deprecated', 'Neurons with ReLU can get stuck outputting zero for all inputs if they enter the negative region, effectively "dying" and never recovering', 'ReLU outputs grow unbounded', 'ReLU causes memory leaks'],
+    options: ['When ReLU activation values become numerically unstable at very large input magnitudes, causing floating-point overflow and NaN values during training', 'Neurons with ReLU can get stuck outputting zero for all inputs if they enter the negative region, effectively "dying" and never recovering', 'When ReLU outputs grow exponentially large for positive inputs, causing weight values to explode and making gradient-based optimization diverge', 'When repeated application of ReLU across many layers progressively reduces the network\'s effective capacity by clipping important negative activation signals'],
     correctAnswer: 1, explanation: 'If a neuron\'s weights cause all inputs to be negative, ReLU always outputs 0, and the gradient is also 0. The neuron cannot update and is permanently inactive. Solutions include Leaky ReLU, PReLU, and ELU which have non-zero gradients for negative inputs.',
     difficulty: 'medium', roles: ['ml_engineer', 'ai_engineer'], category: 'technical', companySizes: ['midsize', 'large', 'faang'], unitId: 'deep-learning', lessonId: 'nn-basics',
   },
@@ -321,7 +321,7 @@ export const questionsPart2 = [
   },
   {
     id: 'cnn-2', text: 'What is pooling in CNNs?',
-    options: ['Combining multiple models', 'A downsampling operation that reduces spatial dimensions while retaining important features, providing translation invariance', 'Adding noise to inputs', 'A type of activation function'],
+    options: ['An ensemble technique that aggregates predictions from multiple convolutional filters across different spatial locations of the feature map', 'A downsampling operation that reduces spatial dimensions while retaining important features, providing translation invariance', 'A regularization strategy that adds random perturbations to feature maps between convolutional layers, similar to dropout for spatial data', 'A nonlinear function applied channel-wise to feature maps that normalizes activation values and prevents gradient saturation in deep networks'],
     correctAnswer: 1, explanation: 'Pooling reduces spatial dimensions (height, width) while keeping the most important information. Max pooling takes the maximum value in each patch. Average pooling takes the average. It reduces computation and provides some translation invariance.',
     difficulty: 'easy', roles: ['data_scientist', 'ml_engineer', 'ai_engineer'], category: 'technical', companySizes: ['startup', 'midsize', 'large', 'faang'], unitId: 'deep-learning', lessonId: 'cnn',
   },
@@ -439,13 +439,13 @@ export const questionsPart2 = [
   // Lesson: training-optimization
   {
     id: 'train-1', text: 'What is learning rate scheduling?',
-    options: ['Setting the learning rate to a constant', 'Adjusting the learning rate during training according to a schedule (step decay, cosine annealing, warmup) to improve convergence', 'Training at different times of day', 'A type of regularization'],
+    options: ['Using a fixed learning rate determined by grid search before training begins, ensuring consistent gradient updates throughout the entire optimization process', 'Adjusting the learning rate during training according to a schedule (step decay, cosine annealing, warmup) to improve convergence', 'Assigning different learning rates to different layers of the network based on their depth, with deeper layers receiving larger updates for faster convergence', 'A regularization technique that randomly perturbs the learning rate by a small noise term at each step to help the optimizer escape local minima and saddle points'],
     correctAnswer: 1, explanation: 'Learning rate schedules reduce the learning rate during training. Common strategies: step decay (reduce by factor every N epochs), cosine annealing (smooth decrease), warmup (start low, increase, then decrease). These help reach better minima.',
     difficulty: 'medium', roles: ['ml_engineer', 'ai_engineer'], category: 'technical', companySizes: ['midsize', 'large', 'faang'], unitId: 'deep-learning', lessonId: 'training-optimization',
   },
   {
     id: 'train-2', text: 'What is early stopping?',
-    options: ['Ending a project early', 'Monitoring validation loss during training and stopping when it starts to increase, preventing overfitting', 'Stopping at a fixed number of epochs', 'A way to speed up training'],
+    options: ['Terminating training when the training loss reaches a predefined target threshold, ensuring the model does not over-optimize on the training objective', 'Monitoring validation loss during training and stopping when it starts to increase, preventing overfitting', 'Setting a fixed maximum number of epochs before training begins and always running for exactly that many epochs regardless of model performance', 'A technique that reduces per-epoch computation by gradually pruning low-magnitude weights during training, making each subsequent epoch faster'],
     correctAnswer: 1, explanation: 'Early stopping monitors validation performance during training. When validation loss stops improving (or starts increasing) for a patience period, training is stopped. This prevents overfitting by finding the right number of training iterations.',
     difficulty: 'easy', roles: ['data_scientist', 'ml_engineer', 'ai_engineer'], category: 'technical', companySizes: ['startup', 'midsize', 'large', 'faang'], unitId: 'deep-learning', lessonId: 'training-optimization',
   },
@@ -463,7 +463,7 @@ export const questionsPart2 = [
   },
   {
     id: 'train-5', text: 'What is knowledge distillation?',
-    options: ['Summarizing research papers', 'Training a smaller "student" model to mimic the outputs (soft predictions) of a larger "teacher" model, compressing model size while retaining most performance', 'Extracting features manually', 'A data preprocessing step'],
+    options: ['Extracting and documenting the key learned patterns from a trained model into human-readable rules for model interpretability and regulatory compliance', 'Training a smaller "student" model to mimic the outputs (soft predictions) of a larger "teacher" model, compressing model size while retaining most performance', 'Selecting the most discriminative features from the final hidden layer of a trained network and using them as inputs to a separate downstream classifier', 'A data preprocessing pipeline that condenses large datasets into smaller representative subsets, preserving statistical properties while reducing training time'],
     correctAnswer: 1, explanation: 'Knowledge distillation trains a compact student model using the soft probability outputs of a larger teacher model (temperature-scaled softmax). The student learns the teacher\'s "dark knowledge" about inter-class similarities, often outperforming a student trained on hard labels alone.',
     difficulty: 'hard', roles: ['ml_engineer', 'ai_engineer'], category: 'technical', companySizes: ['large', 'faang'], unitId: 'deep-learning', lessonId: 'training-optimization',
   },
