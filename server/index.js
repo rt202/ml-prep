@@ -601,8 +601,14 @@ app.put('/api/admin/questions/:id', requireAdmin, async (req, res) => {
   }
 });
 
-app.listen(PORT, async () => {
-  const [allQuestions, allUnits] = await Promise.all([getEffectiveQuestions(), getEffectiveUnits()]);
-  console.log(`📚 Loaded ${allQuestions.length} interview questions across ${allUnits.length} units`);
-  console.log(`🚀 Interview Prep API running on http://localhost:${PORT}`);
-});
+// Export for Vercel serverless — do NOT use app.listen() in production
+export default app;
+
+// Local development only
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, async () => {
+    const [allQuestions, allUnits] = await Promise.all([getEffectiveQuestions(), getEffectiveUnits()]);
+    console.log(`📚 Loaded ${allQuestions.length} interview questions across ${allUnits.length} units`);
+    console.log(`🚀 Interview Prep API running on http://localhost:${PORT}`);
+  });
+}

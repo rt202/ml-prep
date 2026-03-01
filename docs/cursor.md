@@ -408,7 +408,6 @@ If you encounter:
 - [ ] Mobile responsive refinements
 
 ### Known Limitations
-- Local development only (no production deployment yet)
 - Limited to ~3 concurrent users on free tier
 - No automated testing suite yet
 - Manual smoke testing required

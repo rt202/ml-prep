@@ -296,6 +296,8 @@ interview_prep/
 | Service Role | ✅ | ❌ NEVER | ✅ | ❌ NEVER |
 | Session Secret | ✅ | ❌ | ✅ | ❌ |
 
+Note: I have the proper keys set up in my vercel project. do not suggest adding the keys for a solution unless you are SURE that it will fix the problem at hand.
+
 ---
 
 ## Additional Resources
