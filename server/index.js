@@ -43,7 +43,18 @@ const PORT = 3001;
 
 initDb();
 
-app.use(cors({ origin: true, credentials: true }));
+const ALLOWED_ORIGINS = [
+  'http://localhost:5173',
+  'https://mlprep.vercel.app',
+  'https://ml-prep-orpin.vercel.app',
+];
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+    callback(new Error(`CORS: origin ${origin} not allowed`));
+  },
+  credentials: true,
+}));
 app.use(express.json());
 
 function parseCookies(req) {
