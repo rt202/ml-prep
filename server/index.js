@@ -46,7 +46,7 @@ initDb();
 const ALLOWED_ORIGINS = [
   'http://localhost:5173',
   'https://mlprep.vercel.app',
-  'https://ml-prep-orpin.vercel.app',
+  'https://mlprep-api.vercel.app',
 ];
 app.use(cors({
   origin: (origin, callback) => {
