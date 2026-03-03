@@ -9,3 +9,9 @@ server/.env.*
 
 # Private documentation & notes (local only)
 private-docs/
+.vercel
+
+.vscode/
+.cursor/
+textForNewQuestions.md
+
