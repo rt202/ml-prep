@@ -5,3 +5,8 @@ index.db-shm
 vexp.log
 daemon.sock
 daemon.pid
+textForNewQuestions.md
+
+.cursor/
+.vexp/
+.vscode/
