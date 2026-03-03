@@ -54,13 +54,17 @@ export function AuthProvider({ children }) {
 
   const signup = async (email, password, displayName) => {
     if (supabaseAuth.isConfigured()) {
-      await supabaseAuth.signup({ email, password, displayName })
+      const data = await supabaseAuth.signup({ email, password, displayName })
+      // Supabase returns no session when email confirmation is required
+      if (!data.session?.access_token) {
+        return { needsConfirmation: true }
+      }
       await refreshSession()
-      return true
+      return { needsConfirmation: false }
     }
     const data = await api.signup({ email, password, displayName })
     setUser(data.user)
-    return data.user
+    return { needsConfirmation: false }
   }
 
   const logout = async () => {
