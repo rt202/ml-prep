@@ -43,11 +43,25 @@ const PORT = 3001;
 
 initDb();
 
-const ALLOWED_ORIGINS = [
+const DEFAULT_ALLOWED_ORIGINS = [
   'http://localhost:5173',
   'https://mlprep.vercel.app',
   'https://mlprep-api.vercel.app',
+  'https://mlprep.org',
+  'https://www.mlprep.org',
 ];
+
+function getAllowedOrigins() {
+  const configuredOrigins = (process.env.CORS_ORIGINS || '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  return [...new Set([...DEFAULT_ALLOWED_ORIGINS, ...configuredOrigins])];
+}
+
+const ALLOWED_ORIGINS = getAllowedOrigins();
+
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
