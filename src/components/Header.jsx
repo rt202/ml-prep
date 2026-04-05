@@ -9,6 +9,7 @@ export default function Header() {
   const { isAdmin } = useAuth()
   const location = useLocation()
   const [stats, setStats] = useState(null)
+  const portfolioUrl = import.meta.env.VITE_PORTFOLIO_URL?.trim()
 
   useEffect(() => {
     api.getStats().then(setStats).catch(() => {})
@@ -59,6 +60,16 @@ export default function Header() {
 
           {/* Right side: Stats + User Profile */}
           <div className="flex items-center gap-4">
+            {portfolioUrl && (
+              <a
+                href={portfolioUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="hidden rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium text-gray-500 transition-colors hover:border-primary-300 hover:text-primary-700 dark:border-gray-800 dark:text-gray-400 dark:hover:border-primary-700 dark:hover:text-primary-400 lg:inline-flex"
+              >
+                About Ronak
+              </a>
+            )}
             {stats && (
               <div className="flex items-center gap-4 text-sm">
                 {stats.streak > 0 && (
