@@ -205,7 +205,7 @@ SUPABASE_URL=https://YOUR_PROJECT_ID.supabase.co  # Same as local
 SUPABASE_SERVICE_ROLE_KEY=eyJ...  # Same as local
 SUPABASE_ANON_KEY=eyJ...  # Same as local
 SESSION_SECRET=bjIUYtrzsXky6mtEJvbwjqYWdO/pxuQosnDTwwRnVEGLF4qulZoIg0PQmB+okixFZX9TJJZ3nXyvYJXsIK/2tg==  # Same as local
-CORS_ORIGINS=https://your-app.vercel.app  # ⚠️ CHANGE to your Vercel frontend URL
+CORS_ORIGINS=https://mlprep.vercel.app,https://mlprep.org,https://www.mlprep.org  # Include every production frontend origin
 NODE_ENV=production  # ⚠️ CHANGE to production
 PORT=3001  # Same as local
 ```
@@ -215,6 +215,7 @@ PORT=3001  # Same as local
 VITE_SUPABASE_URL=https://YOUR_PROJECT_ID.supabase.co  # Same as local
 VITE_SUPABASE_ANON_KEY=eyJ...  # Same as local
 VITE_API_BASE_URL=https://your-backend.vercel.app  # ⚠️ CHANGE to your Vercel backend URL
+VITE_PORTFOLIO_URL=https://your-portfolio-domain.com  # Optional "About Ronak" link in the app header
 ```
 
 ---
