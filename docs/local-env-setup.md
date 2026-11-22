@@ -28,8 +28,8 @@ SUPABASE_SERVICE_ROLE_KEY=eyJ...YOUR_SERVICE_ROLE_KEY_HERE...
 SUPABASE_ANON_KEY=eyJ...YOUR_ANON_KEY_HERE...
 
 # Session Configuration
-# Using the generated session secret - DO NOT CHANGE unless you want to log out all users
-SESSION_SECRET=REMOVED_SESSION_SECRET
+# Generate your own value: openssl rand -base64 64
+SESSION_SECRET=YOUR_SESSION_SECRET_HERE
 
 # CORS Configuration
 # Allow requests from local frontend development server
@@ -52,7 +52,7 @@ PORT=3001
    - `SUPABASE_SERVICE_ROLE_KEY` → Your service_role key (secret!)
    - `SUPABASE_ANON_KEY` → Your anon/public key
 
-**Note**: The `SESSION_SECRET` is already filled in with the generated value.
+**Note**: Generate your own `SESSION_SECRET` (see [Generating a New SESSION_SECRET](#generating-a-new-session_secret)). Never commit the real value.
 
 ---
 
@@ -102,7 +102,7 @@ cat > /Users/ronak/Desktop/CodingProjects/interview_prep/server/.env.development
 SUPABASE_URL=https://YOUR_PROJECT_ID.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=eyJ...YOUR_SERVICE_ROLE_KEY_HERE...
 SUPABASE_ANON_KEY=eyJ...YOUR_ANON_KEY_HERE...
-SESSION_SECRET=REMOVED_SESSION_SECRET
+SESSION_SECRET=YOUR_SESSION_SECRET_HERE
 CORS_ORIGINS=http://localhost:5173
 NODE_ENV=development
 PORT=3001
@@ -176,12 +176,7 @@ openssl rand -base64 64
 node -e "console.log(require('crypto').randomBytes(64).toString('base64'))"
 ```
 
-### Current Session Secret (Generated)
-```
-REMOVED_SESSION_SECRET
-```
-
-**Note**: Changing this will log out all users. Keep it consistent across environments if you want sessions to persist.
+**Note**: Keep the real value only in your local `.env` files and in Vercel's environment variables, never in the repo. Changing it logs out all users.
 
 ---
 
@@ -204,7 +199,7 @@ Use these same values in Vercel's environment variables, but change:
 SUPABASE_URL=https://YOUR_PROJECT_ID.supabase.co  # Same as local
 SUPABASE_SERVICE_ROLE_KEY=eyJ...  # Same as local
 SUPABASE_ANON_KEY=eyJ...  # Same as local
-SESSION_SECRET=REMOVED_SESSION_SECRET  # Same as local
+SESSION_SECRET=YOUR_PRODUCTION_SESSION_SECRET  # Generate a separate value for production
 CORS_ORIGINS=https://mlprep.vercel.app,https://mlprep.org,https://www.mlprep.org  # Include every production frontend origin
 NODE_ENV=production  # ⚠️ CHANGE to production
 PORT=3001  # Same as local
@@ -235,7 +230,7 @@ VITE_PORTFOLIO_URL=https://your-portfolio-domain.com  # Optional "About Ronak" l
 - ✅ Check browser console for specific CORS error messages
 
 ### Session/auth issues
-- ✅ Verify `SESSION_SECRET` is set and matches across environments
+- ✅ Verify `SESSION_SECRET` is set in Vercel (use a different value than local)
 - ✅ Check that cookies are enabled in browser
 - ✅ Verify Supabase Auth is enabled in dashboard
 - ✅ Check that redirect URLs are configured in Supabase
